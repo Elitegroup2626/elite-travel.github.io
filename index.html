@@ -38,8 +38,8 @@ header p{position:relative;margin:8px 0 0;color:#c7d3e3;font-size:.92rem}
 :root[data-theme="dark"] .progress i.done{background:var(--gold-soft)}
 @keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card{animation:fadeSlide .28s ease}
-.choice,.city-chip,.addon,.pkg,button{transition:transform .12s ease,background .15s ease}
-.choice:active,.city-chip:active,.addon:active,.pkg:active,button:active{transform:scale(.96)}
+.choice,.city-card,.addon,.pkg,button{transition:transform .12s ease,background .15s ease,opacity .15s ease}
+.choice:active,.city-card:active,.addon:active,.pkg:active,button:active{transform:scale(.96)}
 .live-bar{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 12px;font-size:.78rem;color:var(--muted)}
 .live-chip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;display:flex;align-items:center;gap:4px}
 .live-chip b{color:var(--navy)}
@@ -62,9 +62,12 @@ select,input[type=text],input[type=number],input[type=date]{
 .count output{min-width:28px;text-align:center;font-weight:700}
 .country-block{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .country-head{font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.city-row{display:flex;flex-wrap:wrap;gap:7px}
-.city-chip{border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:.85rem;cursor:pointer}
-.city-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.city-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.city-card{position:relative;border-radius:11px;padding:14px 6px;text-align:center;cursor:pointer;color:#fff;overflow:hidden;opacity:.55;filter:saturate(.6);transform:scale(.97)}
+.city-card.on{opacity:1;filter:saturate(1.1);transform:scale(1);box-shadow:0 6px 16px rgba(0,0,0,.28)}
+.city-card.on::after{content:'✓';position:absolute;top:6px;left:6px;background:#fff;color:var(--navy);width:18px;height:18px;border-radius:50%;font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:900}
+.city-icon{display:block;font-size:1.5rem;margin-bottom:4px}
+.city-name{display:block;font-size:.78rem;font-weight:700}
 .pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pkg{border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;text-align:center}
 .pkg.on{border-color:var(--gold);background:rgba(201,162,39,.14)}
@@ -133,6 +136,22 @@ const DESTS = {
   "ماليزيا": ["كوالالمبور","لنكاوي"],
   "تايلاند": ["بانكوك","بوكيت"]
 };
+const CITY_ICON = {
+  "القاهرة":"🏛️","شرم الشيخ":"🤿","الغردقة":"🏖️",
+  "سوسة":"🏖️","جربة":"🌴","الحمامات":"🌊","قمرت":"🌅","تونس العاصمة":"🕌",
+  "إسطنبول":"🕌","طرابزون":"⛰️","أنطاليا":"🏖️",
+  "جاكرتا":"🏙️","بالي":"🌺",
+  "كوالالمبور":"🏙️","لنكاوي":"🏝️",
+  "بانكوك":"🛕","بوكيت":"🏝️"
+};
+const COUNTRY_GRAD = {
+  "مصر":"linear-gradient(135deg,#c9a227,#8a6d1a)",
+  "تونس":"linear-gradient(135deg,#1e88a8,#0e5470)",
+  "تركيا":"linear-gradient(135deg,#c0392b,#7b241c)",
+  "إندونيسيا":"linear-gradient(135deg,#2e8b57,#1c5636)",
+  "ماليزيا":"linear-gradient(135deg,#6a3fb5,#40245e)",
+  "تايلاند":"linear-gradient(135deg,#0e2a47,#123a63)"
+};
 const PACKAGES = [ {days:10,tours:3}, {days:18,tours:5}, {days:23,tours:8}, {days:30,tours:10} ];
 const NATIONALITIES = ["مصرية","سعودية","إماراتية","ليبية","تونسية","جزائرية","مغربية","أردنية","كويتية","قطرية","بحرينية","عمانية","أخرى"];
 const STAY_TYPES = ["فندق بسيط","منتجع Resort","فيلا خاصة","كوخ خشبي Cottage"];
@@ -154,8 +173,11 @@ const VISA_RULES = {
 
 let step = 1;
 let maxStep = 1;
+let started = false;
 const TOTAL_STEPS = 6;
+const STORAGE_KEY='eliteTripPlan_v1';
 const s = {
+  clientName:"", clientPhone:"",
   nationality:"", tripType:"", adults:2, children:0,
   cities:[],
   origin:"", flightClass:"اقتصادية", startDate:"",
@@ -165,6 +187,13 @@ const s = {
   budget:1500,
   prefs:[]
 };
+function saveProgress(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({s,step,maxStep})); }catch(e){}
+}
+function loadProgress(){
+  try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function clearProgress(){ try{ localStorage.removeItem(STORAGE_KEY); }catch(e){} }
 
 function el(html){const d=document.createElement('div');d.innerHTML=html;return d.firstElementChild;}
 function renderProgress(){
@@ -172,7 +201,7 @@ function renderProgress(){
   for(let i=1;i<=TOTAL_STEPS;i++){
     const cls = i===step?'on':(i<step?'done':'');
     const b=el(`<i class="${cls}"></i>`);
-    b.addEventListener('click',()=>{ if(i<=maxStep){ step=i; render(); } });
+    b.addEventListener('click',()=>{ jumpTo(i); });
     p.appendChild(b);
   }
 }
@@ -243,6 +272,7 @@ function budgetWidgetHTML(){
 function buildWhatsAppMessage(){
   const cities=cityList();
   let msg = `مرحباً مجموعة النخبة سفر، أرغب في عرض سعر لرحلتي:\n\n`;
+  msg += `الاسم: ${s.clientName}\nرقم الهاتف: ${s.clientPhone}\n\n`;
   msg += `الجنسية: ${s.nationality}\nنوع الرحلة: ${s.tripType}\nعدد المسافرين: ${s.adults} بالغين، ${s.children} أطفال\nالميزانية المخصصة من العميل: $${(+s.budget).toLocaleString()}\n\n`;
   msg += `الوجهات:\n${cities.map(c=>`- ${c} (${s.dayMap[c]} أيام)`).join('\n')}\n\n`;
   msg += `الانطلاق من: ${s.origin}\nدرجة الطيران: ${s.flightClass}\nتاريخ البداية: ${s.startDate}\nالباكج: ${s.package.days} يوم\n\n`;
@@ -260,9 +290,15 @@ function go(dir){
   step=Math.max(1,Math.min(TOTAL_STEPS,step+dir));
   if(step>maxStep) maxStep=step;
   render();
+  window.scrollTo({top:0,behavior:'auto'});
+}
+function jumpTo(i){
+  if(i>maxStep) return;
+  step=i; render();
+  window.scrollTo({top:0,behavior:'auto'});
 }
 function validate(){
-  if(step===1) return s.nationality && s.tripType;
+  if(step===1) return s.clientName.trim() && s.clientPhone.trim() && s.nationality && s.tripType;
   if(step===2) return s.cities.length>0;
   if(step===3){ if(!s.origin||!s.startDate||!s.package) return false; ensureDayMap(); return dayTotal()===s.package.days; }
   if(step===4) return s.reception!==null && s.stayTypes.length>0 && s.starsSel.length>0;
@@ -270,17 +306,52 @@ function validate(){
 }
 
 function render(){
+  const prog=document.getElementById('progress');
+  if(!started){
+    prog.style.display='none';
+    document.getElementById('stepCard').innerHTML = stepIntro();
+    wireIntro();
+    return;
+  }
+  prog.style.display='flex';
   renderProgress();
   const card=document.getElementById('stepCard');
   card.innerHTML = liveBarHTML() + (step===1?step1(): step===2?step2(): step===3?step3(): step===4?step4(): step===5?step5(): step6());
   wire();
-  window.scrollTo({top:0,behavior:'auto'});
+  saveProgress();
+}
+function stepIntro(){
+  const saved=loadProgress();
+  return `
+  <div style="text-align:center;padding:6px 0 4px">
+    <h2 class="step-title" style="font-size:1.4rem">مرحباً بك في مجموعة النخبة سفر</h2>
+    <p class="step-sub" style="max-width:420px;margin:0 auto 20px">صمّم رحلتك السياحية المخصصة خطوة بخطوة — من اختيار الوجهات إلى استلام عرض السعر مباشرة عبر واتساب.</p>
+    ${saved? `
+      <button class="primary" id="resumeBtn" style="margin-bottom:10px">متابعة رحلتي المحفوظة</button>
+      <div class="nav-btns"><button class="ghost" id="freshBtn" style="width:100%">بدء رحلة جديدة</button></div>
+    `:`<button class="primary" id="startBtn">ابدأ تصميم رحلتك</button>`}
+  </div>`;
+}
+function wireIntro(){
+  document.getElementById('startBtn')?.addEventListener('click',()=>{ started=true; render(); });
+  document.getElementById('resumeBtn')?.addEventListener('click',()=>{
+    const saved=loadProgress();
+    if(saved){ Object.assign(s,saved.s); step=saved.step; maxStep=saved.maxStep; }
+    started=true; render();
+  });
+  document.getElementById('freshBtn')?.addEventListener('click',()=>{ clearProgress(); started=true; step=1; maxStep=1; render(); });
 }
 
 function step1(){
   return `
   <h2 class="step-title">بيانات الرحلة الأساسية</h2>
   <p class="step-sub">الخطوة 1 من 6</p>
+  <label class="field"><span>الاسم الكامل</span>
+    <input type="text" id="clientName" value="${s.clientName}" placeholder="مثال: أحمد محمد">
+  </label>
+  <label class="field"><span>رقم الهاتف (مع رمز الدولة)</span>
+    <input type="text" id="clientPhone" value="${s.clientPhone}" placeholder="مثال: 00218912345678">
+  </label>
   <label class="field"><span>الجنسية</span>
     <select id="nat"><option value="">اختر الجنسية</option>${NATIONALITIES.map(n=>`<option ${s.nationality===n?'selected':''}>${n}</option>`).join('')}</select>
   </label>
@@ -298,7 +369,7 @@ function step1(){
   <label class="field"><span>الميزانية المخصصة للرحلة (تبدأ من 1500$)</span>
     <input type="number" id="budget" min="1500" step="100" value="${s.budget}">
   </label>
-  <div class="nav-btns"><button class="primary" id="next" ${(!s.nationality||!s.tripType)?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="primary" id="next" ${(!s.clientName.trim()||!s.clientPhone.trim()||!s.nationality||!s.tripType)?'disabled':''}>التالي</button></div>`;
 }
 
 function step2(){
@@ -308,7 +379,11 @@ function step2(){
   ${Object.entries(DESTS).map(([country,cities])=>`
     <div class="country-block">
       <div class="country-head">${country}</div>
-      <div class="city-row">${cities.map(c=>`<div class="city-chip ${s.cities.includes(c)?'on':''}" data-c="${c}">${c}</div>`).join('')}</div>
+      <div class="city-grid">${cities.map(c=>`
+        <div class="city-card ${s.cities.includes(c)?'on':''}" data-c="${c}" style="background:${COUNTRY_GRAD[country]}">
+          <span class="city-icon">${CITY_ICON[c]||'📍'}</span>
+          <span class="city-name">${c}</span>
+        </div>`).join('')}</div>
     </div>`).join('')}
   ${s.nationality && selectedCountries().length? `<div class="visa-box">
     <div style="font-weight:700;font-size:.9rem;margin-bottom:6px">حالة التأشيرة المتوقعة لجنسية "${s.nationality}"</div>
@@ -395,6 +470,11 @@ function step6(){
   <h2 class="step-title" style="text-align:center">ملخص رحلتك جاهز</h2>
   <p class="step-sub" style="text-align:center">راجع التفاصيل قبل التواصل مع فريقنا</p>
   <div class="summary-block">
+    <h3>بيانات التواصل</h3>
+    <div class="summary-row"><span>الاسم</span><span>${s.clientName}</span></div>
+    <div class="summary-row"><span>الهاتف</span><span>${s.clientPhone}</span></div>
+  </div>
+  <div class="summary-block">
     <h3>البيانات الأساسية</h3>
     <div class="summary-row"><span>الجنسية</span><span>${s.nationality}</span></div>
     <div class="summary-row"><span>نوع الرحلة</span><span>${s.tripType}</span></div>
@@ -441,6 +521,14 @@ function wire(){
   document.querySelectorAll('[data-wa]').forEach(btn=>btn.addEventListener('click',()=>{
     window.open('https://wa.me/'+btn.dataset.wa+'?text='+encodeURIComponent(buildWhatsAppMessage()),'_blank');
   }));
+  document.getElementById('clientName')?.addEventListener('input',e=>{
+    s.clientName=e.target.value;
+    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType);
+  });
+  document.getElementById('clientPhone')?.addEventListener('input',e=>{
+    s.clientPhone=e.target.value;
+    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType);
+  });
   document.getElementById('nat')?.addEventListener('change',e=>{s.nationality=e.target.value;render();});
   document.getElementById('budget')?.addEventListener('input',e=>{s.budget=Math.max(1500,+e.target.value||1500);});
   document.getElementById('budget')?.addEventListener('change',e=>{e.target.value=s.budget;});
