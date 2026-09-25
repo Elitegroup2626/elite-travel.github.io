@@ -20,9 +20,9 @@
 :root[data-theme="dark"]{--bg:#0b1626;--card:#101f36;--text:#eef1f6;--muted:#9fb0c8;--line:#22344f;}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;line-height:1.6;min-height:100%}
+body{margin:0;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='0.6' opacity='0.15'%3E%3Crect x='9' y='9' width='26' height='26'/%3E%3Crect x='9' y='9' width='26' height='26' transform='rotate(45 22 22)'/%3E%3C/g%3E%3C/svg%3E") fixed;background-size:44px 44px;color:var(--text);font-family:'Cairo',sans-serif;line-height:1.6;min-height:100%}
 h1,h2,h3,.brand{font-family:'Tajawal',sans-serif}
-header{background:var(--navy-deep);color:#fff;padding:26px 18px 22px;text-align:center;position:relative;overflow:hidden}
+header{background:linear-gradient(160deg,var(--navy-deep),#0a2038 60%,#0c1c30);color:#fff;padding:26px 18px 22px;text-align:center;position:relative;overflow:hidden}
 header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% -20%, rgba(201,162,39,.25), transparent 60%)}
 .logo-badge{position:relative;display:inline-flex;background:#fff;border-radius:18px;padding:10px 22px;box-shadow:0 8px 24px rgba(0,0,0,.25);margin-bottom:4px}
 .logo-badge img{height:64px;display:block}
@@ -30,7 +30,12 @@ header .brand{font-size:1.5rem;font-weight:900;letter-spacing:.5px}
 header .brand span{color:var(--gold)}
 header p{position:relative;margin:8px 0 0;color:#c7d3e3;font-size:.92rem}
 .wrap{max-width:640px;margin:0 auto;padding:0 16px 60px}
-.progress{display:flex;gap:6px;margin:18px 0;cursor:pointer}
+.progress{display:flex;gap:6px;margin:14px 0 4px;cursor:pointer}
+.progress-wrap{margin:18px 0 4px}
+.progress-label{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted);margin-bottom:6px}
+.progress-label b{color:var(--gold)}
+.progress-fill-track{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-bottom:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e8d18f);border-radius:4px;transition:width .4s ease}
 .progress i{flex:1;height:5px;border-radius:3px;background:var(--line);transition:background .3s}
 .progress i.on{background:var(--gold)}
 .progress i.done{background:var(--navy)}
@@ -47,7 +52,9 @@ header p{position:relative;margin:8px 0 0;color:#c7d3e3;font-size:.92rem}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .live-chip b{color:var(--gold)}}
 @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 .celebrate{font-size:2rem;text-align:center;animation:pop .5s ease}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 18px;margin-top:10px}
+.card{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.5);box-shadow:0 8px 30px rgba(14,42,71,.1);border-radius:16px;padding:22px 18px;margin-top:10px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card{background:rgba(16,31,54,.65);border-color:rgba(255,255,255,.08)}}
+:root[data-theme="dark"] .card{background:rgba(16,31,54,.65);border-color:rgba(255,255,255,.08)}
 h2.step-title{margin:0 0 4px;font-size:1.25rem}
 .step-sub{color:var(--muted);font-size:.88rem;margin:0 0 18px}
 label.field{display:block;margin-bottom:16px}
@@ -66,7 +73,8 @@ select,input[type=text],input[type=number],input[type=date]{
 .city-card{position:relative;border-radius:11px;padding:14px 6px;text-align:center;cursor:pointer;color:#fff;overflow:hidden;opacity:.55;filter:saturate(.6);transform:scale(.97)}
 .city-card.on{opacity:1;filter:saturate(1.1);transform:scale(1);box-shadow:0 6px 16px rgba(0,0,0,.28)}
 .city-card.on::after{content:'✓';position:absolute;top:6px;left:6px;background:#fff;color:var(--navy);width:18px;height:18px;border-radius:50%;font-size:.7rem;display:flex;align-items:center;justify-content:center;font-weight:900}
-.city-icon{display:block;font-size:1.5rem;margin-bottom:4px}
+.city-icon{display:block;margin-bottom:4px}
+.city-icon svg{width:26px;height:26px;margin:0 auto;display:block}
 .city-name{display:block;font-size:.78rem;font-weight:700}
 .pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pkg{border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;text-align:center}
@@ -80,7 +88,7 @@ select,input[type=text],input[type=number],input[type=date]{
 .day-total.bad{color:#c0392b;font-weight:700}
 .pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .nav-btns{display:flex;gap:10px;margin-top:22px}
-button.primary{flex:1;background:var(--navy);color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer}
+button.primary{flex:1;background:linear-gradient(135deg,#123a63,var(--navy-deep));color:#fff;border:1px solid rgba(201,162,39,.4);padding:13px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 14px rgba(14,42,71,.25)}
 button.primary:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{background:none;border:1px solid var(--line);color:var(--text);padding:13px 18px;border-radius:10px;cursor:pointer;font-weight:600}
 .summary-block{margin-bottom:16px}
@@ -111,6 +119,16 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--text);padd
 .addon{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;cursor:pointer;font-size:.88rem}
 .addon.on{border-color:var(--gold);background:rgba(201,162,39,.1)}
 .addon .box{width:18px;height:18px;border:2px solid var(--muted);border-radius:5px;flex:none}
+.boarding-pass{position:relative;background:linear-gradient(135deg,var(--navy),var(--navy-deep));color:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 10px 26px rgba(0,0,0,.28);margin-bottom:18px}
+.bp-top{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;letter-spacing:.5px;color:var(--gold-soft);text-transform:uppercase}
+.bp-route{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem;margin-top:8px}
+.bp-route svg{width:20px;height:20px;color:var(--gold);flex:none}
+.bp-divider{border-top:2px dashed rgba(255,255,255,.35);margin:16px 0 12px;position:relative}
+.bp-divider::before,.bp-divider::after{content:'';position:absolute;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.bp-divider::before{left:-4px}
+.bp-divider::after{right:-4px}
+.bp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:.72rem;color:#c7d3e3}
+.bp-grid b{display:block;font-size:.95rem;color:#fff;margin-top:2px;font-weight:800}
 .addon.on .box{background:var(--gold);border-color:var(--gold)}
 .wa-btn{background:#25D366;color:#fff}
 .summary-tags{font-size:.85rem;color:var(--muted)}
@@ -123,7 +141,11 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--text);padd
   <p>صمم رحلتك خطوة بخطوة</p>
 </header>
 <div class="wrap">
-  <div class="progress" id="progress"></div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label"><span>التقدم في التخطيط</span><b id="progressPct">0%</b></div>
+    <div class="progress-fill-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress" id="progress"></div>
+  </div>
   <div class="card" id="stepCard"></div>
 </div>
 
@@ -136,13 +158,22 @@ const DESTS = {
   "ماليزيا": ["كوالالمبور","لنكاوي"],
   "تايلاند": ["بانكوك","بوكيت"]
 };
-const CITY_ICON = {
-  "القاهرة":"🏛️","شرم الشيخ":"🤿","الغردقة":"🏖️",
-  "سوسة":"🏖️","جربة":"🌴","الحمامات":"🌊","قمرت":"🌅","تونس العاصمة":"🕌",
-  "إسطنبول":"🕌","طرابزون":"⛰️","أنطاليا":"🏖️",
-  "جاكرتا":"🏙️","بالي":"🌺",
-  "كوالالمبور":"🏙️","لنكاوي":"🏝️",
-  "بانكوك":"🛕","بوكيت":"🏝️"
+const SVG_ICONS = {
+  heritage:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 3 8h18L12 2zM5 10v9h2v-9H5zm4 0v9h2v-9H9zm4 0v9h2v-9h-2zm4 0v9h2v-9h-2zM3 21h18v2H3z"/></svg>',
+  beach:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 20c3-2 6-2 9 0s6 2 9 0"/><path d="M12 12V3"/><path d="M12 3c4 1 6 4 6 8-4 1-6-1-6-1s-2 2-6 1c0-4 2-7 6-8z"/></svg>',
+  mosque:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a3 3 0 0 1 3 3c0 1.2-.6 2.2-1.5 2.8L14 9h4v2h-1v9h2v2H5v-2h2v-9H6V9h4l.5-1.2A3 3 0 0 1 9 5a3 3 0 0 1 3-3zm-3 9v9h2v-6h2v6h2v-9H9z"/></svg>',
+  mountain:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 19 10 9l3 5 2-3 4 8H5z"/></svg>',
+  skyline:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21V9h4v12H3zm6 0V4h4v17H9zm6 0V11h4v10h-4z"/></svg>',
+  island:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 19c2.5-2 5-2 7 0s5 2 7 0 3-1 6 0"/><path d="M10 12 13 3l3 9"/></svg>',
+  temple:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 8h16L12 2zM6 9v3h12V9H6zm-1 4v2h14v-2H5zm2 3v6h2v-5h6v5h2v-6H7z"/></svg>'
+};
+const CITY_ICON_TYPE = {
+  "القاهرة":"heritage","شرم الشيخ":"beach","الغردقة":"beach",
+  "سوسة":"beach","جربة":"island","الحمامات":"beach","قمرت":"beach","تونس العاصمة":"mosque",
+  "إسطنبول":"mosque","طرابزون":"mountain","أنطاليا":"beach",
+  "جاكرتا":"skyline","بالي":"island",
+  "كوالالمبور":"skyline","لنكاوي":"island",
+  "بانكوك":"temple","بوكيت":"island"
 };
 const COUNTRY_GRAD = {
   "مصر":"linear-gradient(135deg,#c9a227,#8a6d1a)",
@@ -204,6 +235,9 @@ function renderProgress(){
     b.addEventListener('click',()=>{ jumpTo(i); });
     p.appendChild(b);
   }
+  const pct = Math.round(((step-1)/(TOTAL_STEPS-1))*100);
+  document.getElementById('progressPct').textContent = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
 }
 function liveBarHTML(){
   if(step<2) return '';
@@ -306,14 +340,14 @@ function validate(){
 }
 
 function render(){
-  const prog=document.getElementById('progress');
+  const prog=document.getElementById('progressWrap');
   if(!started){
     prog.style.display='none';
     document.getElementById('stepCard').innerHTML = stepIntro();
     wireIntro();
     return;
   }
-  prog.style.display='flex';
+  prog.style.display='block';
   renderProgress();
   const card=document.getElementById('stepCard');
   card.innerHTML = liveBarHTML() + (step===1?step1(): step===2?step2(): step===3?step3(): step===4?step4(): step===5?step5(): step6());
@@ -324,6 +358,14 @@ function stepIntro(){
   const saved=loadProgress();
   return `
   <div style="text-align:center;padding:6px 0 4px">
+    <svg viewBox="0 0 260 130" width="220" style="margin:0 auto 8px;display:block">
+      <circle cx="70" cy="90" r="46" fill="none" stroke="var(--navy)" stroke-width="2" opacity=".5"/>
+      <path d="M28 90h84M70 44v92M40 62c20 10 60 10 80 0M40 118c20-10 60-10 80 0" stroke="var(--navy)" stroke-width="1.3" fill="none" opacity=".4"/>
+      <path d="M78 78 Q150 30 230 40" stroke="var(--gold)" stroke-width="2" fill="none" stroke-dasharray="5 6"/>
+      <g transform="translate(206,26) rotate(18)">
+        <path d="M0 8 L34 8 L44 3 L48 5 L40 10 L48 15 L44 17 L34 12 L0 12 L6 10Z" fill="var(--gold)"/>
+      </g>
+    </svg>
     <h2 class="step-title" style="font-size:1.4rem">مرحباً بك في مجموعة النخبة سفر</h2>
     <p class="step-sub" style="max-width:420px;margin:0 auto 20px">صمّم رحلتك السياحية المخصصة خطوة بخطوة — من اختيار الوجهات إلى استلام عرض السعر مباشرة عبر واتساب.</p>
     ${saved? `
@@ -381,7 +423,7 @@ function step2(){
       <div class="country-head">${country}</div>
       <div class="city-grid">${cities.map(c=>`
         <div class="city-card ${s.cities.includes(c)?'on':''}" data-c="${c}" style="background:${COUNTRY_GRAD[country]}">
-          <span class="city-icon">${CITY_ICON[c]||'📍'}</span>
+          <span class="city-icon">${SVG_ICONS[CITY_ICON_TYPE[c]]||''}</span>
           <span class="city-name">${c}</span>
         </div>`).join('')}</div>
     </div>`).join('')}
@@ -465,8 +507,23 @@ function step5(){
 
 function step6(){
   const cities=cityList();
+  const mainDest = selectedCountries().length>1 ? "وجهات متعددة" : (selectedCountries()[0]||"");
   return `
   <div class="celebrate">🎉</div>
+  <div class="boarding-pass">
+    <div class="bp-top"><span>بطاقة رحلة</span><span>مجموعة النخبة سفر</span></div>
+    <div class="bp-route">
+      <span>${s.origin}</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 12l19-9-4 9 4 9-19-9zm5 0l10 4-4-4 4-4-10 4z" transform="rotate(90 12 12)"/></svg>
+      <span>${mainDest}</span>
+    </div>
+    <div class="bp-divider"></div>
+    <div class="bp-grid">
+      <div>المسافر<b>${s.clientName}</b></div>
+      <div>تاريخ السفر<b>${s.startDate}</b></div>
+      <div>المدة<b>${s.package.days} يوم</b></div>
+    </div>
+  </div>
   <h2 class="step-title" style="text-align:center">ملخص رحلتك جاهز</h2>
   <p class="step-sub" style="text-align:center">راجع التفاصيل قبل التواصل مع فريقنا</p>
   <div class="summary-block">
