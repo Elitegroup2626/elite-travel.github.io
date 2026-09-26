@@ -61,6 +61,9 @@ label.field{display:block;margin-bottom:16px}
 label.field>span{display:block;font-weight:600;font-size:.9rem;margin-bottom:6px}
 select,input[type=text],input[type=number],input[type=date]{
   width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font-family:inherit;font-size:.95rem}
+select.invalid,input.invalid{border-color:#c0392b;background:rgba(192,57,43,.06)}
+.field-err{color:#c0392b;font-size:.72rem;margin-top:5px}
+.choice-row.invalid,.city-grid.invalid,div.invalid{outline:2px solid #c0392b;outline-offset:4px;border-radius:12px}
 .choice-row{display:flex;gap:8px;flex-wrap:wrap}
 .choice{border:1px solid var(--line);border-radius:9px;padding:10px 14px;cursor:pointer;font-size:.9rem;background:var(--bg);user-select:none;flex:1;text-align:center;min-width:110px}
 .choice.on{border-color:var(--gold);background:rgba(201,162,39,.14);font-weight:700}
@@ -242,6 +245,7 @@ const s = {
   prefs:[]
 };
 let visaBrowse=false;
+let showErrors=false;
 let selectedVisaCountry=null;
 function saveProgress(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({s,step,maxStep})); }catch(e){}
@@ -272,6 +276,30 @@ function liveBarHTML(){
   if(s.adults+s.children) chips.push(`<div class="live-chip">👥 <b>${s.adults+s.children}</b> مسافر</div>`);
   chips.push(`<div class="live-chip">💰 <b>$${(+s.budget).toLocaleString()}</b></div>`);
   return chips.length? `<div class="live-bar">${chips.join('')}</div>`:'';
+}
+function missingFieldsBanner(){
+  if(!showErrors) return '';
+  const missing=[];
+  if(step===1){
+    if(!s.clientName.trim()) missing.push('الاسم الكامل');
+    if(!s.clientPhone.trim()) missing.push('رقم الهاتف');
+    if(!s.nationality) missing.push('الجنسية');
+    if(!s.tripType) missing.push('نوع الرحلة');
+    if(s.tripType==="رحلة عمل" && !s.businessSector) missing.push('نوع العمل');
+  } else if(step===2){
+    if(s.cities.length===0) missing.push('الوجهات والمدن');
+  } else if(step===3){
+    if(!s.origin) missing.push('مدينة الانطلاق');
+    if(!s.startDate) missing.push('تاريخ بدء الرحلة');
+    if(!s.package) missing.push('الباكج أو عدد الليالي');
+    else if(dayTotal()!==s.package.days) missing.push('توزيع الأيام (يجب أن يساوي مجموعها عدد أيام الباقة)');
+  } else if(step===4){
+    if(s.reception===null) missing.push('خدمة الاستقبال بالمطار');
+    if(s.stayTypes.length===0) missing.push('نوع الإقامة');
+    if(s.starsSel.length===0) missing.push('تصنيف الإقامة');
+  }
+  if(!missing.length) return '';
+  return `<div class="note" style="border-color:#c0392b;background:rgba(192,57,43,.08);color:#c0392b;font-weight:700">⚠️ يرجى إكمال قبل المتابعة: ${missing.join('، ')}</div>`;
 }
 function cityList(){return s.cities;}
 function evenDistribute(days,n){
@@ -349,7 +377,8 @@ function buildWhatsAppMessage(){
 }
 
 function go(dir){
-  if(dir>0 && !validate()) return;
+  if(dir>0 && !validate()){ showErrors=true; render(); window.scrollTo({top:0,behavior:'auto'}); return; }
+  showErrors=false;
   step=Math.max(1,Math.min(TOTAL_STEPS,step+dir));
   if(step>maxStep) maxStep=step;
   render();
@@ -385,7 +414,7 @@ function render(){
   prog.style.display='block';
   renderProgress();
   const card=document.getElementById('stepCard');
-  card.innerHTML = liveBarHTML() + (step===1?step1(): step===2?step2(): step===3?step3(): step===4?step4(): step===5?step5(): step6());
+  card.innerHTML = liveBarHTML() + missingFieldsBanner() + (step===1?step1(): step===2?step2(): step===3?step3(): step===4?step4(): step===5?step5(): step6());
   wire();
   saveProgress();
 }
@@ -460,29 +489,35 @@ function wireVisaScreen(){
 }
 
 function step1(){
+  const err = showErrors;
   return `
   <h2 class="step-title">بيانات الرحلة الأساسية</h2>
   <p class="step-sub">الخطوة 1 من 6</p>
   <label class="field"><span>الاسم الكامل</span>
-    <input type="text" id="clientName" value="${s.clientName}" placeholder="مثال: أحمد محمد">
+    <input type="text" id="clientName" class="${err&&!s.clientName.trim()?'invalid':''}" value="${s.clientName}" placeholder="مثال: أحمد محمد">
+    ${err&&!s.clientName.trim()?'<div class="field-err">هذا الحقل مطلوب</div>':''}
   </label>
   <label class="field"><span>رقم الهاتف (مع رمز الدولة)</span>
-    <input type="text" id="clientPhone" value="${s.clientPhone}" placeholder="مثال: 00218912345678">
+    <input type="text" id="clientPhone" class="${err&&!s.clientPhone.trim()?'invalid':''}" value="${s.clientPhone}" placeholder="مثال: 00218912345678">
+    ${err&&!s.clientPhone.trim()?'<div class="field-err">هذا الحقل مطلوب</div>':''}
   </label>
   <label class="field"><span>الجنسية</span>
-    <select id="nat"><option value="">اختر الجنسية</option>${NATIONALITIES.map(n=>`<option ${s.nationality===n?'selected':''}>${n}</option>`).join('')}</select>
+    <select id="nat" class="${err&&!s.nationality?'invalid':''}"><option value="">اختر الجنسية</option>${NATIONALITIES.map(n=>`<option ${s.nationality===n?'selected':''}>${n}</option>`).join('')}</select>
+    ${err&&!s.nationality?'<div class="field-err">يرجى اختيار الجنسية</div>':''}
   </label>
   <label class="field"><span>نوع الرحلة</span>
-    <div class="choice-row" id="tripType">
+    <div class="choice-row ${err&&!s.tripType?'invalid':''}" id="tripType">
       ${["شهر عسل","رحلة شبابية","رحلة عائلية","رحلة عمل"].map(t=>`<div class="choice ${s.tripType===t?'on':''}" data-v="${t}">${t}</div>`).join('')}
     </div>
+    ${err&&!s.tripType?'<div class="field-err">يرجى اختيار نوع الرحلة</div>':''}
   </label>
   ${s.tripType==="رحلة عمل"? `
   <div class="subhead">نوع العمل الذي تقصده</div>
+  ${err&&!s.businessSector?'<div class="field-err" style="margin:-6px 0 10px">يرجى اختيار نوع العمل</div>':''}
   ${Object.entries(BUSINESS_SECTORS).map(([cat,items])=>`
     <div style="margin-bottom:10px">
       <div class="tb-title">${cat}</div>
-      <div class="choice-row">${items.map(it=>`<div class="choice ${s.businessSector===it?'on':''}" style="min-width:150px" data-biz="${it}">${it}</div>`).join('')}</div>
+      <div class="choice-row ${err&&!s.businessSector?'invalid':''}">${items.map(it=>`<div class="choice ${s.businessSector===it?'on':''}" style="min-width:150px" data-biz="${it}">${it}</div>`).join('')}</div>
     </div>`).join('')}`:''}
   <label class="field"><span>عدد البالغين</span>
     <div class="count"><button data-adj="adults" data-d="-1">−</button><output>${s.adults}</output><button data-adj="adults" data-d="1">+</button></div>
@@ -500,6 +535,8 @@ function step2(){
   return `
   <h2 class="step-title">الوجهات والمدن</h2>
   <p class="step-sub">يمكنك اختيار أكثر من دولة ومدينة — الخطوة 2 من 6</p>
+  ${showErrors&&s.cities.length===0?'<div class="field-err" style="margin-bottom:10px">يرجى اختيار مدينة واحدة على الأقل</div>':''}
+  <div class="${showErrors&&s.cities.length===0?'invalid':''}" style="${showErrors&&s.cities.length===0?'border-radius:12px;padding:6px':''}">
   ${Object.entries(DESTS).map(([country,cities])=>`
     <div class="country-block">
       <div class="country-head">${country}</div>
@@ -509,6 +546,7 @@ function step2(){
           <span class="city-name">${c}</span>
         </div>`).join('')}</div>
     </div>`).join('')}
+  </div>
   ${selectedCountries().length? `<div class="visa-box">
     <div style="font-weight:700;font-size:.9rem;margin-bottom:6px">التأشيرات المطلوبة لوجهاتك المختارة</div>
     ${selectedCountries().map(c=>{
@@ -526,17 +564,21 @@ function step3(){
   ensureDayMap();
   const cities=cityList();
   const total=dayTotal();
+  const err=showErrors;
   return `
   <h2 class="step-title">الطيران والباكج</h2>
   <p class="step-sub">الخطوة 3 من 6</p>
-  <label class="field"><span>مدينة الانطلاق</span><input type="text" id="origin" value="${s.origin}" placeholder="مثال: القاهرة"></label>
+  <label class="field"><span>مدينة الانطلاق</span><input type="text" id="origin" class="${err&&!s.origin?'invalid':''}" value="${s.origin}" placeholder="مثال: القاهرة"></label>
+  ${err&&!s.origin?'<div class="field-err" style="margin-top:-12px">هذا الحقل مطلوب</div>':''}
   <label class="field"><span>درجة الطيران</span>
     <div class="choice-row">${["اقتصادية","رجال أعمال"].map(c=>`<div class="choice ${s.flightClass===c?'on':''}" data-fc="${c}">${c}</div>`).join('')}</div>
   </label>
-  <label class="field"><span>تاريخ بدء الرحلة</span><input type="date" id="startDate" value="${s.startDate}"></label>
+  <label class="field"><span>تاريخ بدء الرحلة</span><input type="date" id="startDate" class="${err&&!s.startDate?'invalid':''}" value="${s.startDate}"></label>
+  ${err&&!s.startDate?'<div class="field-err" style="margin-top:-12px">هذا الحقل مطلوب</div>':''}
   <label class="field"><span>اختر الباكج</span>
-    <div class="pkg-grid">${PACKAGES.map(p=>`<div class="pkg ${s.package&&!s.package.custom&&s.package.days===p.days?'on':''}" data-pk="${p.days}"><b>${p.days} أيام</b><small>${p.tours} جولات مقترحة</small></div>`).join('')}</div>
+    <div class="pkg-grid ${err&&!s.package?'invalid':''}">${PACKAGES.map(p=>`<div class="pkg ${s.package&&!s.package.custom&&s.package.days===p.days?'on':''}" data-pk="${p.days}"><b>${p.days} أيام</b><small>${p.tours} جولات مقترحة</small></div>`).join('')}</div>
   </label>
+  ${err&&!s.package?'<div class="field-err" style="margin-top:-10px">يرجى اختيار باكج أو تحديد عدد الليالي</div>':''}
   <label class="field"><span>أو حدد عدد الليالي بنفسك (دون التقيد بالباقات أعلاه)</span>
     <input type="number" id="customNights" min="1" placeholder="مثال: 14" value="${s.package&&s.package.custom?s.package.days:''}">
   </label>
@@ -559,21 +601,25 @@ function step3(){
 }
 
 function step4(){
+  const err=showErrors;
   return `
   <h2 class="step-title">الاستقبال والإقامة</h2>
   <p class="step-sub">الخطوة 4 من 6</p>
   <label class="field"><span>خدمة الاستقبال والتوديع بالمطار</span>
-    <div class="choice-row">
+    <div class="choice-row ${err&&s.reception===null?'invalid':''}">
       <div class="choice ${s.reception===true?'on':''}" data-rec="1">نعم، أريدها</div>
       <div class="choice ${s.reception===false?'on':''}" data-rec="0">لا، لا أريد</div>
     </div>
   </label>
+  ${err&&s.reception===null?'<div class="field-err" style="margin-top:-10px">يرجى الاختيار</div>':''}
   <label class="field"><span>نوع الإقامة (يمكن اختيار أكثر من نوع)</span>
-    <div class="choice-row">${STAY_TYPES.map(t=>`<div class="choice ${s.stayTypes.includes(t)?'on':''}" data-stay="${t}">${t}</div>`).join('')}</div>
+    <div class="choice-row ${err&&s.stayTypes.length===0?'invalid':''}">${STAY_TYPES.map(t=>`<div class="choice ${s.stayTypes.includes(t)?'on':''}" data-stay="${t}">${t}</div>`).join('')}</div>
   </label>
+  ${err&&s.stayTypes.length===0?'<div class="field-err" style="margin-top:-10px">يرجى اختيار نوع إقامة واحد على الأقل</div>':''}
   <label class="field"><span>تصنيف الإقامة (يمكن اختيار أكثر من تصنيف)</span>
-    <div class="choice-row">${[3,4,5].map(n=>`<div class="choice ${s.starsSel.includes(n)?'on':''}" data-star="${n}">${'⭐'.repeat(n)}</div>`).join('')}</div>
+    <div class="choice-row ${err&&s.starsSel.length===0?'invalid':''}">${[3,4,5].map(n=>`<div class="choice ${s.starsSel.includes(n)?'on':''}" data-star="${n}">${'⭐'.repeat(n)}</div>`).join('')}</div>
   </label>
+  ${err&&s.starsSel.length===0?'<div class="field-err" style="margin-top:-10px">يرجى اختيار تصنيف واحد على الأقل</div>':''}
   <div class="subhead">خدمات إضافية اختيارية</div>
   <div class="addon-grid">${ADDONS.map(a=>`<div class="addon ${s.addons.includes(a)?'on':''}" data-addon="${a}"><span class="box"></span><span>${a}</span></div>`).join('')}</div>
   <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next" ${(s.reception===null||s.stayTypes.length===0||s.starsSel.length===0)?'disabled':''}>التالي</button></div>`;
@@ -670,10 +716,12 @@ function wire(){
   }));
   document.getElementById('clientName')?.addEventListener('input',e=>{
     s.clientName=e.target.value;
+    e.target.classList.toggle('invalid', showErrors && !s.clientName.trim());
     document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('clientPhone')?.addEventListener('input',e=>{
     s.clientPhone=e.target.value;
+    e.target.classList.toggle('invalid', showErrors && !s.clientPhone.trim());
     document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('nat')?.addEventListener('change',e=>{s.nationality=e.target.value;render();});
