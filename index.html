@@ -156,7 +156,12 @@ const DESTS = {
   "تركيا": ["إسطنبول","طرابزون","أنطاليا"],
   "إندونيسيا": ["جاكرتا","بالي"],
   "ماليزيا": ["كوالالمبور","لنكاوي"],
-  "تايلاند": ["بانكوك","بوكيت"]
+  "تايلاند": ["بانكوك","بوكيت"],
+  "الصين": ["كوانزو","شانج هاي","شينزن"],
+  "قطر": ["الدوحة"],
+  "الأردن": ["عمان"],
+  "سلطنة عمان": ["مسقط"],
+  "الإمارات": ["دبي"]
 };
 const SVG_ICONS = {
   heritage:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 3 8h18L12 2zM5 10v9h2v-9H5zm4 0v9h2v-9H9zm4 0v9h2v-9h-2zm4 0v9h2v-9h-2zM3 21h18v2H3z"/></svg>',
@@ -173,7 +178,9 @@ const CITY_ICON_TYPE = {
   "إسطنبول":"mosque","طرابزون":"mountain","أنطاليا":"beach",
   "جاكرتا":"skyline","بالي":"island",
   "كوالالمبور":"skyline","لنكاوي":"island",
-  "بانكوك":"temple","بوكيت":"island"
+  "بانكوك":"temple","بوكيت":"island",
+  "كوانزو":"skyline","شانج هاي":"skyline","شينزن":"skyline",
+  "الدوحة":"skyline","عمان":"heritage","مسقط":"mosque","دبي":"skyline"
 };
 const COUNTRY_GRAD = {
   "مصر":"linear-gradient(135deg,#c9a227,#8a6d1a)",
@@ -181,7 +188,12 @@ const COUNTRY_GRAD = {
   "تركيا":"linear-gradient(135deg,#c0392b,#7b241c)",
   "إندونيسيا":"linear-gradient(135deg,#2e8b57,#1c5636)",
   "ماليزيا":"linear-gradient(135deg,#6a3fb5,#40245e)",
-  "تايلاند":"linear-gradient(135deg,#0e2a47,#123a63)"
+  "تايلاند":"linear-gradient(135deg,#0e2a47,#123a63)",
+  "الصين":"linear-gradient(135deg,#b71c1c,#7a0000)",
+  "قطر":"linear-gradient(135deg,#8b1e3f,#5a1029)",
+  "الأردن":"linear-gradient(135deg,#a0522d,#5c2e0f)",
+  "سلطنة عمان":"linear-gradient(135deg,#0b6e4f,#04402d)",
+  "الإمارات":"linear-gradient(135deg,#7a1f1f,#4a1010)"
 };
 const PACKAGES = [ {days:10,tours:3}, {days:18,tours:5}, {days:23,tours:8}, {days:30,tours:10} ];
 const NATIONALITIES = ["مصرية","سعودية","إماراتية","ليبية","تونسية","جزائرية","مغربية","أردنية","كويتية","قطرية","بحرينية","عمانية","أخرى"];
@@ -193,13 +205,23 @@ const PHONE_NUMBERS = [
   {label:"الرقم الثاني", number:"218910613800"},
   {label:"الرقم الثالث", number:"218910613700"}
 ];
-const VISA_RULES = {
-  "مصر":{tag:"visa-arrival",label:"تأشيرة عند الوصول"},
-  "تونس":{tag:"visa-free",label:"بدون تأشيرة"},
-  "تركيا":{tag:"visa-req",label:"تتطلب تأشيرة إلكترونية مسبقة"},
-  "إندونيسيا":{tag:"visa-arrival",label:"تأشيرة عند الوصول"},
-  "ماليزيا":{tag:"visa-free",label:"بدون تأشيرة"},
-  "تايلاند":{tag:"visa-free",label:"بدون تأشيرة (حتى 30 يوم)"}
+const VISA_INFO = {
+  "تونس":{free:true,label:"بدون تأشيرة"},
+  "ماليزيا":{free:true,label:"بدون تأشيرة"},
+  "تايلاند":{price:100,duration:"15 يوم",requirements:["صورة شخصية (PDF)","صورة من جواز السفر (PDF)","صورة من شهادة الميلاد + 100 د.ل أو شهادة الحالة الجنائية","كشف حساب بنكي حقيقي لا يقل عن 5,000 دينار","تذكرة سفر مؤكدة"]},
+  "إندونيسيا":{price:100,duration:"8 أيام عمل",label:"تأشيرة إندونيسيا (بالي)",requirements:["صورة من جواز السفر (PDF)","صورة شخصية (PDF)"]},
+  "الصين":{price:190,duration:"28 يوم",label:"تأشيرة الصين — لحضور معرض كانتون فير",requirements:["صورة شخصية (PDF)","صورة من جواز السفر (PDF)"]},
+  "مصر":{price:120,duration:"3 أيام",requirements:["صورة واضحة من جواز السفر","تذكرة سفر مؤكدة"]},
+  "قطر":{price:100,duration:"5 إلى 7 أيام",requirements:["صورة من جواز السفر (PDF)","صورة شخصية بخلفية بيضاء (PDF)","حجز فندق مؤكد عبر منظومة Discover Qatar لمدة 3 ليالٍ"]},
+  "سلطنة عمان":{price:150,duration:"3 إلى 5 أيام عمل",requirements:["صورة شخصية (PDF)","صورة من جواز السفر (PDF)"]},
+  "تركيا":{price:187,duration:"24 ساعة",requirements:["صورة من جواز السفر","صورة من شهادة الميلاد"]},
+  "الأردن":{price:100,duration:"تصدر عند الوصول",arrival:true,requirements:["جواز سفر ساري المفعول لا يقل عن 6 أشهر"]}
+};
+const BUSINESS_SECTORS = {
+  "التجارة والاستيراد": ["الملابس والأحذية","الهواتف المحمولة وإكسسواراتها","الإلكترونيات والأجهزة المنزلية","قطع غيار السيارات والإطارات","العطور ومستحضرات التجميل","الأثاث والمفروشات","مواد البناء والتشطيبات (سيراميك ورخام)","ألعاب الأطفال والقرطاسية","المعدات والمولدات الكهربائية"],
+  "الخدمات واللوجستيات": ["إصدار التأشيرات (السفر إلى تونس/مصر للسفارات)","تجميع وشحن البضائع وتخليص الحاويات","حجوزات الفنادق والطيران (تعاقدات B2B)","فتح الحسابات البنكية وتأسيس الشركات بالخارج"],
+  "الصحة والعلاج": ["العلاج الطبي والجراحات المتقدمة","العمليات التجميلية وزراعة الشعر","استيراد المستلزمات الطبية والأدوية"],
+  "التعليم والتطوير": ["الدراسة الجامعية والدراسات العليا","الدورات التدريبية والدبلومات المهنية","المشاركة في المعارض التجارية الدولية"]
 };
 
 let step = 1;
@@ -216,8 +238,11 @@ const s = {
   reception:null, stayTypes:[], starsSel:[], addons:[],
   guideLang:"", tourType:"",
   budget:1500,
+  businessSector:"",
   prefs:[]
 };
+let visaBrowse=false;
+let selectedVisaCountry=null;
 function saveProgress(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({s,step,maxStep})); }catch(e){}
 }
@@ -286,7 +311,8 @@ function estimateBudget(){
   const stayCost = nightly*days*rooms;
   const toursCost = (s.package?s.package.tours:3) * 35 * pax * (s.tourType==="جولات خاصة Private"?1.6:1);
   const addonCost = s.addons.length*40*pax;
-  const total = flightPerPerson*pax + stayCost + toursCost + addonCost;
+  const visaCost = selectedCountries().reduce((sum,c)=>sum+((VISA_INFO[c]&&VISA_INFO[c].price)||0),0) * pax;
+  const total = flightPerPerson*pax + stayCost + toursCost + addonCost + visaCost;
   const perPersonPerDay = total/pax/days;
   let tier = perPersonPerDay<90?"اقتصادي":perPersonPerDay<180?"متوسط":"فاخر";
   return {total:Math.round(total/50)*50, tier};
@@ -299,8 +325,8 @@ function budgetWidgetHTML(){
       <div class="tier ${b.tier==='متوسط'?'active':''}">متوسط</div>
       <div class="tier ${b.tier==='فاخر'?'active':''}">فاخر</div>
     </div>
-    <div style="margin-top:8px;font-size:1.05rem;font-weight:800;color:var(--navy)">≈ $${b.total.toLocaleString()}</div>
-    <div style="font-size:.78rem;color:var(--muted)">تقدير تقريبي غير نهائي — السعر الفعلي يُحدد من فريقنا</div>
+    <div style="margin-top:8px;font-size:1.05rem;font-weight:800;color:#e6b800">≈ $${b.total.toLocaleString()}</div>
+    <div style="font-size:.78rem;color:var(--muted)">تقدير تقريبي غير نهائي (شامل رسوم التأشيرات إن وجدت) — السعر الفعلي يُحدد من فريقنا</div>
   </div>`;
 }
 function buildWhatsAppMessage(){
@@ -314,7 +340,10 @@ function buildWhatsAppMessage(){
   if(s.addons.length) msg += `خدمات إضافية: ${s.addons.join('، ')}\n`;
   if(s.guideLang) msg += `لغة المرشد: ${s.guideLang}\n`;
   if(s.tourType) msg += `نوع الجولات: ${s.tourType}\n`;
+  if(s.tripType==="رحلة عمل" && s.businessSector) msg += `نوع العمل: ${s.businessSector}\n`;
   if(s.prefs.length) msg += `التفضيلات: ${s.prefs.join('، ')}\n`;
+  const visaTotal = selectedCountries().reduce((sum,c)=>sum+((VISA_INFO[c]&&VISA_INFO[c].price)||0),0) * Math.max(1,s.adults+s.children);
+  if(visaTotal>0) msg += `رسوم التأشيرات المقدرة: $${visaTotal.toLocaleString()}\n`;
   msg += `\nالميزانية التقديرية: ≈$${estimateBudget().total.toLocaleString()} (${estimateBudget().tier})`;
   return msg;
 }
@@ -332,7 +361,7 @@ function jumpTo(i){
   window.scrollTo({top:0,behavior:'auto'});
 }
 function validate(){
-  if(step===1) return s.clientName.trim() && s.clientPhone.trim() && s.nationality && s.tripType;
+  if(step===1) return s.clientName.trim() && s.clientPhone.trim() && s.nationality && s.tripType && (s.tripType!=="رحلة عمل" || s.businessSector);
   if(step===2) return s.cities.length>0;
   if(step===3){ if(!s.origin||!s.startDate||!s.package) return false; ensureDayMap(); return dayTotal()===s.package.days; }
   if(step===4) return s.reception!==null && s.stayTypes.length>0 && s.starsSel.length>0;
@@ -341,6 +370,12 @@ function validate(){
 
 function render(){
   const prog=document.getElementById('progressWrap');
+  if(visaBrowse){
+    prog.style.display='none';
+    document.getElementById('stepCard').innerHTML = selectedVisaCountry? stepVisaDetail(): stepVisaList();
+    wireVisaScreen();
+    return;
+  }
   if(!started){
     prog.style.display='none';
     document.getElementById('stepCard').innerHTML = stepIntro();
@@ -372,6 +407,7 @@ function stepIntro(){
       <button class="primary" id="resumeBtn" style="margin-bottom:10px">متابعة رحلتي المحفوظة</button>
       <div class="nav-btns"><button class="ghost" id="freshBtn" style="width:100%">بدء رحلة جديدة</button></div>
     `:`<button class="primary" id="startBtn">ابدأ تصميم رحلتك</button>`}
+    <div class="nav-btns"><button class="ghost" id="visaBtn" style="width:100%">تصفح خدمة التأشيرات</button></div>
   </div>`;
 }
 function wireIntro(){
@@ -382,6 +418,45 @@ function wireIntro(){
     started=true; render();
   });
   document.getElementById('freshBtn')?.addEventListener('click',()=>{ clearProgress(); started=true; step=1; maxStep=1; render(); });
+  document.getElementById('visaBtn')?.addEventListener('click',()=>{ visaBrowse=true; selectedVisaCountry=null; render(); });
+}
+function stepVisaList(){
+  const items = Object.entries(VISA_INFO).filter(([,v])=>v.price);
+  return `
+  <h2 class="step-title">خدمة التأشيرات</h2>
+  <p class="step-sub">اختر التأشيرة لعرض السعر والمستندات ومدة الإنجاز</p>
+  <div class="city-grid" style="grid-template-columns:repeat(2,1fr)">
+    ${items.map(([country,v])=>`
+      <div class="city-card on" data-visa="${country}" style="background:${COUNTRY_GRAD[country]||'linear-gradient(135deg,var(--navy),var(--navy-deep))'}">
+        <span class="city-name" style="font-size:.82rem">${v.label||('تأشيرة '+country)}</span>
+        <span style="display:block;font-size:.72rem;margin-top:4px;opacity:.9">$${v.price}</span>
+      </div>`).join('')}
+  </div>
+  <div class="nav-btns"><button class="ghost" id="visaBack" style="width:100%">رجوع للرئيسية</button></div>`;
+}
+function stepVisaDetail(){
+  const country = selectedVisaCountry;
+  const v = VISA_INFO[country];
+  return `
+  <h2 class="step-title">${v.label||('تأشيرة '+country)}</h2>
+  <div class="visa-box">
+    <div class="visa-row"><span>السعر</span><span class="visa-tag visa-arrival">$${v.price}</span></div>
+    <div class="visa-row"><span>مدة الإنجاز</span><span>${v.duration}</span></div>
+  </div>
+  <div class="subhead">المستندات المطلوبة</div>
+  <ul style="padding-right:20px;font-size:.88rem;line-height:1.9;margin:0 0 14px">${v.requirements.map(r=>`<li>${r}</li>`).join('')}</ul>
+  <div class="nav-btns"><button class="ghost" id="visaListBack" style="width:100%">رجوع لقائمة التأشيرات</button></div>
+  <div class="nav-btns"><button class="primary wa-btn" id="visaWa" style="width:100%">اطلب هذه التأشيرة عبر واتساب</button></div>`;
+}
+function wireVisaScreen(){
+  document.getElementById('visaBack')?.addEventListener('click',()=>{ visaBrowse=false; render(); });
+  document.querySelectorAll('[data-visa]').forEach(el=>el.addEventListener('click',()=>{ selectedVisaCountry=el.dataset.visa; render(); }));
+  document.getElementById('visaListBack')?.addEventListener('click',()=>{ selectedVisaCountry=null; render(); });
+  document.getElementById('visaWa')?.addEventListener('click',()=>{
+    const v=VISA_INFO[selectedVisaCountry];
+    const msg=`مرحباً مجموعة النخبة سفر، أرغب في الاستفسار عن ${v.label||('تأشيرة '+selectedVisaCountry)} (السعر $${v.price}، مدة الإنجاز ${v.duration}).`;
+    window.open('https://wa.me/'+PHONE_NUMBERS[0].number+'?text='+encodeURIComponent(msg),'_blank');
+  });
 }
 
 function step1(){
@@ -399,9 +474,16 @@ function step1(){
   </label>
   <label class="field"><span>نوع الرحلة</span>
     <div class="choice-row" id="tripType">
-      ${["شهر عسل","رحلة شبابية","رحلة عائلية"].map(t=>`<div class="choice ${s.tripType===t?'on':''}" data-v="${t}">${t}</div>`).join('')}
+      ${["شهر عسل","رحلة شبابية","رحلة عائلية","رحلة عمل"].map(t=>`<div class="choice ${s.tripType===t?'on':''}" data-v="${t}">${t}</div>`).join('')}
     </div>
   </label>
+  ${s.tripType==="رحلة عمل"? `
+  <div class="subhead">نوع العمل الذي تقصده</div>
+  ${Object.entries(BUSINESS_SECTORS).map(([cat,items])=>`
+    <div style="margin-bottom:10px">
+      <div class="tb-title">${cat}</div>
+      <div class="choice-row">${items.map(it=>`<div class="choice ${s.businessSector===it?'on':''}" style="min-width:150px" data-biz="${it}">${it}</div>`).join('')}</div>
+    </div>`).join('')}`:''}
   <label class="field"><span>عدد البالغين</span>
     <div class="count"><button data-adj="adults" data-d="-1">−</button><output>${s.adults}</output><button data-adj="adults" data-d="1">+</button></div>
   </label>
@@ -411,7 +493,7 @@ function step1(){
   <label class="field"><span>الميزانية المخصصة للرحلة (تبدأ من 1500$)</span>
     <input type="number" id="budget" min="1500" step="100" value="${s.budget}">
   </label>
-  <div class="nav-btns"><button class="primary" id="next" ${(!s.clientName.trim()||!s.clientPhone.trim()||!s.nationality||!s.tripType)?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="primary" id="next" ${(!s.clientName.trim()||!s.clientPhone.trim()||!s.nationality||!s.tripType||(s.tripType==="رحلة عمل"&&!s.businessSector))?'disabled':''}>التالي</button></div>`;
 }
 
 function step2(){
@@ -427,10 +509,15 @@ function step2(){
           <span class="city-name">${c}</span>
         </div>`).join('')}</div>
     </div>`).join('')}
-  ${s.nationality && selectedCountries().length? `<div class="visa-box">
-    <div style="font-weight:700;font-size:.9rem;margin-bottom:6px">حالة التأشيرة المتوقعة لجنسية "${s.nationality}"</div>
-    ${selectedCountries().map(c=>{const v=VISA_RULES[c];return `<div class="visa-row"><span>${c}</span><span class="visa-tag ${v.tag}">${v.label}</span></div>`;}).join('')}
-    <div style="font-size:.76rem;color:var(--muted);margin-top:4px">تقديري — يُرجى تأكيد المتطلبات مع السفارة قبل الحجز</div>
+  ${selectedCountries().length? `<div class="visa-box">
+    <div style="font-weight:700;font-size:.9rem;margin-bottom:6px">التأشيرات المطلوبة لوجهاتك المختارة</div>
+    ${selectedCountries().map(c=>{
+      const v=VISA_INFO[c];
+      if(!v) return `<div class="visa-row"><span>${c}</span><span class="visa-tag visa-req">يرجى التواصل معنا للتأكيد</span></div>`;
+      if(v.free) return `<div class="visa-row"><span>${c}</span><span class="visa-tag visa-free">${v.label}</span></div>`;
+      return `<div class="visa-row"><span>${c}</span><span class="visa-tag visa-arrival">$${v.price} · ${v.duration}</span></div>`;
+    }).join('')}
+    <div style="font-size:.76rem;color:var(--muted);margin-top:4px">أسعار ومدد خدمة التأشيرات الخاصة بمجموعة النخبة سفر — التفاصيل الكاملة في "تصفح خدمة التأشيرات" بالصفحة الرئيسية</div>
   </div>`:''}
   <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next" ${s.cities.length===0?'disabled':''}>التالي</button></div>`;
 }
@@ -448,7 +535,10 @@ function step3(){
   </label>
   <label class="field"><span>تاريخ بدء الرحلة</span><input type="date" id="startDate" value="${s.startDate}"></label>
   <label class="field"><span>اختر الباكج</span>
-    <div class="pkg-grid">${PACKAGES.map(p=>`<div class="pkg ${s.package&&s.package.days===p.days?'on':''}" data-pk="${p.days}"><b>${p.days} أيام</b><small>${p.tours} جولات مقترحة</small></div>`).join('')}</div>
+    <div class="pkg-grid">${PACKAGES.map(p=>`<div class="pkg ${s.package&&!s.package.custom&&s.package.days===p.days?'on':''}" data-pk="${p.days}"><b>${p.days} أيام</b><small>${p.tours} جولات مقترحة</small></div>`).join('')}</div>
+  </label>
+  <label class="field"><span>أو حدد عدد الليالي بنفسك (دون التقيد بالباقات أعلاه)</span>
+    <input type="number" id="customNights" min="1" placeholder="مثال: 14" value="${s.package&&s.package.custom?s.package.days:''}">
   </label>
   ${s.package?`
   <div class="day-editor">
@@ -580,16 +670,17 @@ function wire(){
   }));
   document.getElementById('clientName')?.addEventListener('input',e=>{
     s.clientName=e.target.value;
-    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType);
+    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('clientPhone')?.addEventListener('input',e=>{
     s.clientPhone=e.target.value;
-    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType);
+    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('nat')?.addEventListener('change',e=>{s.nationality=e.target.value;render();});
   document.getElementById('budget')?.addEventListener('input',e=>{s.budget=Math.max(1500,+e.target.value||1500);});
   document.getElementById('budget')?.addEventListener('change',e=>{e.target.value=s.budget;});
   document.querySelectorAll('[data-v]').forEach(n=>n.addEventListener('click',()=>{s.tripType=n.dataset.v;render();}));
+  document.querySelectorAll('[data-biz]').forEach(n=>n.addEventListener('click',()=>{s.businessSector=n.dataset.biz;render();}));
   document.querySelectorAll('[data-adj]').forEach(b=>b.addEventListener('click',()=>{
     const k=b.dataset.adj,d=+b.dataset.d; s[k]=Math.max(k==='adults'?1:0,s[k]+d); render();
   }));
@@ -604,6 +695,10 @@ function wire(){
   document.querySelectorAll('[data-pk]').forEach(p=>p.addEventListener('click',()=>{
     s.package=PACKAGES.find(pp=>pp.days==p.dataset.pk); s.dayMap={}; ensureDayMap(); render();
   }));
+  document.getElementById('customNights')?.addEventListener('change',e=>{
+    const n=+e.target.value;
+    if(n>0){ s.package={days:n,tours:Math.max(1,Math.round(n*0.3)),custom:true}; s.dayMap={}; ensureDayMap(); render(); }
+  });
   document.querySelectorAll('[data-day]').forEach(inp=>inp.addEventListener('input',e=>{
     s.dayMap[e.target.dataset.day]=+e.target.value||0;
     const total=dayTotal();
