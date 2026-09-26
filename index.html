@@ -528,7 +528,7 @@ function step1(){
   <label class="field"><span>الميزانية المخصصة للرحلة (تبدأ من 1500$)</span>
     <input type="number" id="budget" min="1500" step="100" value="${s.budget}">
   </label>
-  <div class="nav-btns"><button class="primary" id="next" ${(!s.clientName.trim()||!s.clientPhone.trim()||!s.nationality||!s.tripType||(s.tripType==="رحلة عمل"&&!s.businessSector))?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="primary" id="next">التالي</button></div>`;
 }
 
 function step2(){
@@ -557,7 +557,7 @@ function step2(){
     }).join('')}
     <div style="font-size:.76rem;color:var(--muted);margin-top:4px">أسعار ومدد خدمة التأشيرات الخاصة بمجموعة النخبة سفر — التفاصيل الكاملة في "تصفح خدمة التأشيرات" بالصفحة الرئيسية</div>
   </div>`:''}
-  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next" ${s.cities.length===0?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next">التالي</button></div>`;
 }
 
 function step3(){
@@ -597,7 +597,7 @@ function step3(){
       </div>`).join('')}
   </div>`:''}
   ${s.package? budgetWidgetHTML():''}
-  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next" ${(!s.origin||!s.startDate||!s.package||total!==(s.package&&s.package.days))?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next">التالي</button></div>`;
 }
 
 function step4(){
@@ -622,7 +622,7 @@ function step4(){
   ${err&&s.starsSel.length===0?'<div class="field-err" style="margin-top:-10px">يرجى اختيار تصنيف واحد على الأقل</div>':''}
   <div class="subhead">خدمات إضافية اختيارية</div>
   <div class="addon-grid">${ADDONS.map(a=>`<div class="addon ${s.addons.includes(a)?'on':''}" data-addon="${a}"><span class="box"></span><span>${a}</span></div>`).join('')}</div>
-  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next" ${(s.reception===null||s.stayTypes.length===0||s.starsSel.length===0)?'disabled':''}>التالي</button></div>`;
+  <div class="nav-btns"><button class="ghost" id="back">رجوع</button><button class="primary" id="next">التالي</button></div>`;
 }
 
 function step5(){
@@ -717,12 +717,10 @@ function wire(){
   document.getElementById('clientName')?.addEventListener('input',e=>{
     s.clientName=e.target.value;
     e.target.classList.toggle('invalid', showErrors && !s.clientName.trim());
-    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('clientPhone')?.addEventListener('input',e=>{
     s.clientPhone=e.target.value;
     e.target.classList.toggle('invalid', showErrors && !s.clientPhone.trim());
-    document.getElementById('next').disabled=!(s.clientName.trim()&&s.clientPhone.trim()&&s.nationality&&s.tripType&&(s.tripType!=="رحلة عمل"||s.businessSector));
   });
   document.getElementById('nat')?.addEventListener('change',e=>{s.nationality=e.target.value;render();});
   document.getElementById('budget')?.addEventListener('input',e=>{s.budget=Math.max(1500,+e.target.value||1500);});
@@ -737,9 +735,9 @@ function wire(){
     if(i>-1) s.cities.splice(i,1); else s.cities.push(v);
     render();
   }));
-  document.getElementById('origin')?.addEventListener('input',e=>{s.origin=e.target.value; document.getElementById('next').disabled=!(s.origin&&s.startDate&&s.package&&dayTotal()===s.package.days);});
+  document.getElementById('origin')?.addEventListener('input',e=>{s.origin=e.target.value; e.target.classList.toggle('invalid', showErrors && !s.origin);});
   document.querySelectorAll('[data-fc]').forEach(c=>c.addEventListener('click',()=>{s.flightClass=c.dataset.fc;render();}));
-  document.getElementById('startDate')?.addEventListener('input',e=>{s.startDate=e.target.value; document.getElementById('next').disabled=!(s.origin&&s.startDate&&s.package&&dayTotal()===s.package.days);});
+  document.getElementById('startDate')?.addEventListener('input',e=>{s.startDate=e.target.value; e.target.classList.toggle('invalid', showErrors && !s.startDate);});
   document.querySelectorAll('[data-pk]').forEach(p=>p.addEventListener('click',()=>{
     s.package=PACKAGES.find(pp=>pp.days==p.dataset.pk); s.dayMap={}; ensureDayMap(); render();
   }));
@@ -752,7 +750,6 @@ function wire(){
     const total=dayTotal();
     document.getElementById('dayTotal').textContent=`مجموع الأيام: ${total} / ${s.package.days}`;
     document.getElementById('dayTotal').className='day-total'+(total===s.package.days?'':' bad');
-    document.getElementById('next').disabled = total!==s.package.days;
   }));
   document.querySelectorAll('[data-rec]').forEach(r=>r.addEventListener('click',()=>{s.reception=r.dataset.rec==='1';render();}));
   document.querySelectorAll('[data-stay]').forEach(r=>r.addEventListener('click',()=>{
