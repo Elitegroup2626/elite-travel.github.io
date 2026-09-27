@@ -134,6 +134,7 @@ button.ghost{background:none;border:1px solid var(--line);color:var(--text);padd
 .bp-grid b{display:block;font-size:.95rem;color:#fff;margin-top:2px;font-weight:800}
 .addon.on .box{background:var(--gold);border-color:var(--gold)}
 .wa-btn{background:#25D366;color:#fff}
+.cta-gold{background:linear-gradient(135deg,var(--gold),#a5811d)!important;color:#1a1204!important;font-size:1.05rem;box-shadow:0 8px 20px rgba(201,162,39,.35)}
 .summary-tags{font-size:.85rem;color:var(--muted)}
 @media print{header,.progress,.nav-btns{display:none!important}.wrap{padding:0}.card{border:none}}
 </style>
@@ -246,6 +247,34 @@ const s = {
 };
 let visaBrowse=false;
 let showErrors=false;
+let flightMode=false;
+let flightErrors=false;
+const fb = {
+  name:"", phone:"",
+  tripType:"roundtrip",
+  from:"", to:"", departDate:"", returnDate:"",
+  segments:[{from:"",to:"",date:""},{from:"",to:"",date:""}],
+  adults:1, children:0, infants:0, baggage:"بدون وزن", classPref:"اقتصادية"
+};
+function validateFlight(){
+  if(!fb.name.trim() || !fb.phone.trim()) return false;
+  if(fb.tripType==="roundtrip") return fb.from.trim() && fb.to.trim() && fb.departDate && fb.returnDate;
+  if(fb.tripType==="oneway") return fb.from.trim() && fb.to.trim() && fb.departDate;
+  return fb.segments.length>=2 && fb.segments.every(sg=>sg.from.trim() && sg.to.trim() && sg.date);
+}
+function buildFlightMessage(){
+  let msg = `مرحباً مجموعة النخبة سفر، أرغب في حجز تذكرة طيران:\n\n`;
+  msg += `الاسم: ${fb.name}\nرقم الهاتف: ${fb.phone}\nعدد المسافرين: ${fb.adults} بالغين، ${fb.children} أطفال (2-12 سنة)، ${fb.infants} رضّع\nوزن الأمتعة: ${fb.baggage}\nدرجة الطيران: ${fb.classPref}\n\n`;
+  if(fb.tripType==="roundtrip"){
+    msg += `نوع الرحلة: ذهاب وعودة\nمن: ${fb.from}\nإلى: ${fb.to}\nتاريخ الذهاب: ${fb.departDate}\nتاريخ العودة: ${fb.returnDate}\n`;
+  } else if(fb.tripType==="oneway"){
+    msg += `نوع الرحلة: ذهاب فقط\nمن: ${fb.from}\nإلى: ${fb.to}\nتاريخ السفر: ${fb.departDate}\n`;
+  } else {
+    msg += `نوع الرحلة: مدن متعددة\n`;
+    fb.segments.forEach((sg,i)=>{ msg += `المحطة ${i+1}: من ${sg.from} إلى ${sg.to} بتاريخ ${sg.date}\n`; });
+  }
+  return msg;
+}
 let selectedVisaCountry=null;
 function saveProgress(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({s,step,maxStep})); }catch(e){}
@@ -399,6 +428,12 @@ function validate(){
 
 function render(){
   const prog=document.getElementById('progressWrap');
+  if(flightMode){
+    prog.style.display='none';
+    document.getElementById('stepCard').innerHTML = stepFlightBooking();
+    wireFlightBooking();
+    return;
+  }
   if(visaBrowse){
     prog.style.display='none';
     document.getElementById('stepCard').innerHTML = selectedVisaCountry? stepVisaDetail(): stepVisaList();
@@ -432,6 +467,7 @@ function stepIntro(){
     </svg>
     <h2 class="step-title" style="font-size:1.4rem">مرحباً بك في مجموعة النخبة سفر</h2>
     <p class="step-sub" style="max-width:420px;margin:0 auto 20px">صمّم رحلتك السياحية المخصصة خطوة بخطوة — من اختيار الوجهات إلى استلام عرض السعر مباشرة عبر واتساب.</p>
+    <button class="primary cta-gold" id="ticketBtn" style="width:100%;margin-bottom:12px">✈️ احجز تذكرتك الآن</button>
     ${saved? `
       <button class="primary" id="resumeBtn" style="margin-bottom:10px">متابعة رحلتي المحفوظة</button>
       <div class="nav-btns"><button class="ghost" id="freshBtn" style="width:100%">بدء رحلة جديدة</button></div>
@@ -448,6 +484,7 @@ function wireIntro(){
   });
   document.getElementById('freshBtn')?.addEventListener('click',()=>{ clearProgress(); started=true; step=1; maxStep=1; render(); });
   document.getElementById('visaBtn')?.addEventListener('click',()=>{ visaBrowse=true; selectedVisaCountry=null; render(); });
+  document.getElementById('ticketBtn')?.addEventListener('click',()=>{ flightMode=true; flightErrors=false; render(); });
 }
 function stepVisaList(){
   const items = Object.entries(VISA_INFO).filter(([,v])=>v.price);
@@ -486,6 +523,94 @@ function wireVisaScreen(){
     const msg=`مرحباً مجموعة النخبة سفر، أرغب في الاستفسار عن ${v.label||('تأشيرة '+selectedVisaCountry)} (السعر $${v.price}، مدة الإنجاز ${v.duration}).`;
     window.open('https://wa.me/'+PHONE_NUMBERS[0].number+'?text='+encodeURIComponent(msg),'_blank');
   });
+}
+
+function stepFlightBooking(){
+  const err = flightErrors;
+  return `
+  <h2 class="step-title">حجز التذاكر</h2>
+  <p class="step-sub">عبّئ بيانات رحلتك وسنرسل لك أفضل عرض سعر</p>
+  ${err&&!validateFlight()?'<div class="note" style="border-color:#c0392b;background:rgba(192,57,43,.08);color:#c0392b;font-weight:700">⚠️ يرجى إكمال جميع الحقول المطلوبة قبل الإرسال</div>':''}
+  <label class="field"><span>الاسم الكامل</span>
+    <input type="text" id="fbName" class="${err&&!fb.name.trim()?'invalid':''}" value="${fb.name}" placeholder="مثال: أحمد محمد">
+  </label>
+  <label class="field"><span>رقم الهاتف</span>
+    <input type="text" id="fbPhone" class="${err&&!fb.phone.trim()?'invalid':''}" value="${fb.phone}" placeholder="مثال: 00218912345678">
+  </label>
+  <label class="field"><span>نوع الرحلة</span>
+    <div class="choice-row">
+      ${[["roundtrip","ذهاب وعودة"],["oneway","ذهاب فقط"],["multi","مدن متعددة"]].map(([k,l])=>`<div class="choice ${fb.tripType===k?'on':''}" data-triptype="${k}">${l}</div>`).join('')}
+    </div>
+  </label>
+  ${fb.tripType!=="multi"? `
+    <label class="field"><span>مدينة المغادرة</span><input type="text" id="fbFrom" class="${err&&!fb.from.trim()?'invalid':''}" value="${fb.from}" placeholder="مثال: طرابلس"></label>
+    <label class="field"><span>مدينة الوصول</span><input type="text" id="fbTo" class="${err&&!fb.to.trim()?'invalid':''}" value="${fb.to}" placeholder="مثال: إسطنبول"></label>
+    <label class="field"><span>تاريخ الذهاب</span><input type="date" id="fbDepart" class="${err&&!fb.departDate?'invalid':''}" value="${fb.departDate}"></label>
+    ${fb.tripType==="roundtrip"?`<label class="field"><span>تاريخ العودة</span><input type="date" id="fbReturn" class="${err&&!fb.returnDate?'invalid':''}" value="${fb.returnDate}"></label>`:''}
+  `:`
+    <div class="subhead">مقاطع الرحلة</div>
+    ${fb.segments.map((sg,i)=>`
+      <div class="country-block">
+        <div class="country-head" style="justify-content:space-between">
+          <span>المحطة ${i+1}</span>
+          ${fb.segments.length>2?`<span data-rmseg="${i}" style="color:#c0392b;cursor:pointer;font-size:.78rem">✕ حذف</span>`:''}
+        </div>
+        <label class="field"><span>من</span><input type="text" data-seg-from="${i}" class="${err&&!sg.from.trim()?'invalid':''}" value="${sg.from}"></label>
+        <label class="field"><span>إلى</span><input type="text" data-seg-to="${i}" class="${err&&!sg.to.trim()?'invalid':''}" value="${sg.to}"></label>
+        <label class="field"><span>التاريخ</span><input type="date" data-seg-date="${i}" class="${err&&!sg.date?'invalid':''}" value="${sg.date}"></label>
+      </div>`).join('')}
+    <div class="nav-btns"><button class="ghost" id="addSeg" style="width:100%">+ إضافة محطة أخرى</button></div>
+  `}
+  <label class="field"><span>عدد البالغين</span>
+    <div class="count"><button data-fbadj="adults" data-d="-1">−</button><output>${fb.adults}</output><button data-fbadj="adults" data-d="1">+</button></div>
+  </label>
+  <label class="field"><span>عدد الأطفال (أكبر من سنتين وأقل من 12)</span>
+    <div class="count"><button data-fbadj="children" data-d="-1">−</button><output>${fb.children}</output><button data-fbadj="children" data-d="1">+</button></div>
+  </label>
+  <label class="field"><span>عدد الرضّع (أقل من سنتين)</span>
+    <div class="count"><button data-fbadj="infants" data-d="-1">−</button><output>${fb.infants}</output><button data-fbadj="infants" data-d="1">+</button></div>
+  </label>
+  <label class="field"><span>وزن الأمتعة</span>
+    <div class="choice-row">${["بدون وزن","8 كيلو حقيبة يد","15 كيلو","23 كيلو","40 كيلو"].map(w=>`<div class="choice ${fb.baggage===w?'on':''}" style="min-width:120px" data-fbbag="${w}">${w}</div>`).join('')}</div>
+  </label>
+  <label class="field"><span>درجة الطيران</span>
+    <div class="choice-row">${["اقتصادية","رجال أعمال"].map(c=>`<div class="choice ${fb.classPref===c?'on':''}" data-fbclass="${c}">${c}</div>`).join('')}</div>
+  </label>
+  <div class="nav-btns"><button class="ghost" id="fbBack" style="width:100%">رجوع للرئيسية</button></div>
+  ${PHONE_NUMBERS.map(p=>`<div class="nav-btns"><button class="primary wa-btn" data-fbwa="${p.number}" style="width:100%">إرسال طلب الحجز — ${p.label}</button></div>`).join('')}`;
+}
+function wireFlightBooking(){
+  document.getElementById('fbBack')?.addEventListener('click',()=>{ flightMode=false; render(); });
+  document.getElementById('fbName')?.addEventListener('input',e=>{ fb.name=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.name.trim()); });
+  document.getElementById('fbPhone')?.addEventListener('input',e=>{ fb.phone=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.phone.trim()); });
+  document.querySelectorAll('[data-triptype]').forEach(el=>el.addEventListener('click',()=>{
+    fb.tripType=el.dataset.triptype;
+    if(fb.tripType==="multi" && fb.segments.length<2) fb.segments=[{from:"",to:"",date:""},{from:"",to:"",date:""}];
+    render();
+  }));
+  document.getElementById('fbFrom')?.addEventListener('input',e=>{ fb.from=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.from.trim()); });
+  document.getElementById('fbTo')?.addEventListener('input',e=>{ fb.to=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.to.trim()); });
+  document.getElementById('fbDepart')?.addEventListener('change',e=>{ fb.departDate=e.target.value; render(); });
+  document.getElementById('fbReturn')?.addEventListener('change',e=>{ fb.returnDate=e.target.value; render(); });
+  document.querySelectorAll('[data-seg-from]').forEach(el=>el.addEventListener('input',e=>{ fb.segments[+el.dataset.segFrom].from=e.target.value; }));
+  document.querySelectorAll('[data-seg-to]').forEach(el=>el.addEventListener('input',e=>{ fb.segments[+el.dataset.segTo].to=e.target.value; }));
+  document.querySelectorAll('[data-seg-date]').forEach(el=>el.addEventListener('change',e=>{ fb.segments[+el.dataset.segDate].date=e.target.value; render(); }));
+  document.getElementById('addSeg')?.addEventListener('click',()=>{ fb.segments.push({from:"",to:"",date:""}); render(); });
+  document.querySelectorAll('[data-rmseg]').forEach(el=>el.addEventListener('click',()=>{
+    if(fb.segments.length>2){ fb.segments.splice(+el.dataset.rmseg,1); render(); }
+  }));
+  document.querySelectorAll('[data-fbadj]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.fbadj, d=+b.dataset.d;
+    fb[k]=Math.max(k==='adults'?1:0, fb[k]+d);
+    render();
+  }));
+  document.querySelectorAll('[data-fbbag]').forEach(el=>el.addEventListener('click',()=>{ fb.baggage=el.dataset.fbbag; render(); }));
+  document.querySelectorAll('[data-fbclass]').forEach(el=>el.addEventListener('click',()=>{ fb.classPref=el.dataset.fbclass; render(); }));
+  document.querySelectorAll('[data-fbwa]').forEach(btn=>btn.addEventListener('click',()=>{
+    if(!validateFlight()){ flightErrors=true; render(); return; }
+    flightErrors=false;
+    window.open('https://wa.me/'+btn.dataset.fbwa+'?text='+encodeURIComponent(buildFlightMessage()),'_blank');
+  }));
 }
 
 function step1(){
