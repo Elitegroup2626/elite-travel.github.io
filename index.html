@@ -227,6 +227,23 @@ button.primary{margin:0}
   .subhead{break-after:avoid}
   .itin-result{animation:none}
 }
+
+.phone-wrap{position:relative;display:flex;direction:ltr;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+.phone-wrap.invalid{border-color:#c0392b;background:rgba(192,57,43,.06)}
+.phone-wrap:focus-within{border-color:var(--gold)}
+.phone-wrap .phone-input{flex:1;min-width:0;border:none!important;background:transparent!important;border-radius:0 9px 9px 0;padding:11px 12px;outline:none}
+.cc-btn{display:flex;align-items:center;gap:6px;border:none;border-inline-end:1px solid var(--line);background:rgba(201,162,39,.08);color:var(--text);padding:0 10px;border-radius:9px 0 0 9px;font-family:inherit;font-size:.95rem;cursor:pointer;height:auto;min-height:44px}
+.cc-btn b{font-weight:700;direction:ltr}.cc-btn i{font-style:normal;font-size:.7rem;color:var(--muted)}
+.cc-flag{width:24px;height:auto;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.15);flex:none}
+.cc-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;background:var(--card,#fff);border:1px solid var(--gold);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.28);overflow:hidden;direction:rtl}
+.cc-panel[hidden]{display:none}
+.cc-panel .cc-search{width:100%;border:none!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;padding:12px;background:var(--bg)!important;font-size:.95rem;outline:none}
+.cc-list{max-height:250px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;font-size:.92rem}
+.cc-item .cc-name{flex:1}.cc-item .cc-dial{color:var(--muted);font-size:.85rem}
+.cc-item.on{background:rgba(201,162,39,.18);font-weight:700}
+@media (hover:hover){.cc-item:hover{background:rgba(201,162,39,.12)}}
+.cc-empty{padding:16px;text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -325,7 +342,7 @@ let started = false;
 const TOTAL_STEPS = 6;
 const STORAGE_KEY='eliteTripPlan_v1';
 const s = {
-  clientName:"", clientPhone:"",
+  clientName:"", clientPhone:"", phoneIso:"LY", phoneLocal:"",
   nationality:"", tripType:"", adults:2, children:0,
   cities:[],
   origin:"", flightClass:"اقتصادية", startDate:"",
@@ -405,6 +422,77 @@ function openZoom(src){
   const o=document.createElement('div'); o.className='zoom'; o.innerHTML='<img src="'+src+'" alt="">';
   o.addEventListener('click',()=>o.remove()); document.body.appendChild(o);
 }
+const COUNTRIES=[["LY","ليبيا","218"],["IS","آيسلندا","354"],["AZ","أذربيجان","994"],["AM","أرمينيا","374"],["AW","أروبا","297"],["AU","أستراليا","61"],["AF","أفغانستان","93"],["AL","ألبانيا","355"],["DE","ألمانيا","49"],["AG","أنتيغوا وبربودا","1268"],["AD","أندورا","376"],["AO","أنغولا","244"],["AI","أنغويلا","1264"],["UY","أورغواي","598"],["UZ","أوزبكستان","998"],["UG","أوغندا","256"],["UA","أوكرانيا","380"],["IE","أيرلندا","353"],["ET","إثيوبيا","251"],["ER","إريتريا","291"],["ES","إسبانيا","34"],["EE","إستونيا","372"],["IL","إسرائيل","972"],["SZ","إسواتيني","268"],["ID","إندونيسيا","62"],["IR","إيران","98"],["IT","إيطاليا","39"],["PS","الأراضي الفلسطينية","970"],["AR","الأرجنتين","54"],["JO","الأردن","962"],["IO","الإقليم البريطاني في المحيط الهندي","246"],["EC","الإكوادور","593"],["AE","الإمارات العربية المتحدة","971"],["BH","البحرين","973"],["BR","البرازيل","55"],["PT","البرتغال","351"],["BA","البوسنة والهرسك","387"],["CZ","التشيك","420"],["ME","الجبل الأسود","382"],["DZ","الجزائر","213"],["DK","الدانمرك","45"],["CV","الرأس الأخضر","238"],["SV","السلفادور","503"],["SN","السنغال","221"],["SD","السودان","249"],["SE","السويد","46"],["EH","الصحراء الغربية","212"],["SO","الصومال","252"],["CN","الصين","86"],["IQ","العراق","964"],["GA","الغابون","241"],["VA","الفاتيكان","379"],["PH","الفلبين","63"],["CM","الكاميرون","237"],["CG","الكونغو - برازافيل","242"],["CD","الكونغو - كينشاسا","243"],["KW","الكويت","965"],["MA","المغرب","212"],["MX","المكسيك","52"],["SA","المملكة العربية السعودية","966"],["GB","المملكة المتحدة","44"],["NO","النرويج","47"],["AT","النمسا","43"],["NE","النيجر","227"],["IN","الهند","91"],["US","الولايات المتحدة","1"],["JP","اليابان","81"],["YE","اليمن","967"],["GR","اليونان","30"],["PG","بابوا غينيا الجديدة","675"],["PY","باراغواي","595"],["PK","باكستان","92"],["PW","بالاو","680"],["BB","بربادوس","1246"],["BM","برمودا","1441"],["BN","بروناي","673"],["BE","بلجيكا","32"],["BG","بلغاريا","359"],["BZ","بليز","501"],["BD","بنغلاديش","880"],["PA","بنما","507"],["BJ","بنين","229"],["BT","بوتان","975"],["BW","بوتسوانا","267"],["PR","بورتوريكو","1787"],["BF","بوركينا فاسو","226"],["BI","بوروندي","257"],["PL","بولندا","48"],["BO","بوليفيا","591"],["PF","بولينيزيا الفرنسية","689"],["PE","بيرو","51"],["BY","بيلاروس","375"],["TH","تايلاند","66"],["TW","تايوان","886"],["TM","تركمانستان","993"],["TR","تركيا","90"],["TT","ترينيداد وتوباغو","1868"],["TD","تشاد","235"],["CL","تشيلي","56"],["TZ","تنزانيا","255"],["TG","توغو","228"],["TV","توفالو","688"],["TK","توكيلاو","690"],["TN","تونس","216"],["TO","تونغا","676"],["TL","تيمور - ليشتي","670"],["JM","جامايكا","1876"],["GI","جبل طارق","350"],["AX","جزر آلاند","358"],["BS","جزر البهاما","1242"],["KM","جزر القمر","269"],["MQ","جزر المارتينيك","596"],["MV","جزر المالديف","960"],["PN","جزر بيتكيرن","64"],["TC","جزر توركس وكايكوس","1649"],["SB","جزر سليمان","677"],["FO","جزر فارو","298"],["FK","جزر فوكلاند","500"],["VI","جزر فيرجن الأمريكية","1340"],["VG","جزر فيرجن البريطانية","1284"],["KY","جزر كايمان","1345"],["CK","جزر كوك","682"],["CC","جزر كوكوس (كيلينغ)","61"],["MH","جزر مارشال","692"],["MP","جزر ماريانا الشمالية","1670"],["WF","جزر والس وفوتونا","681"],["CX","جزيرة كريسماس","61"],["IM","جزيرة مان","44"],["NF","جزيرة نورفولك","672"],["CF","جمهورية أفريقيا الوسطى","236"],["DO","جمهورية الدومينيكان","1809"],["ZA","جنوب أفريقيا","27"],["SS","جنوب السودان","211"],["GE","جورجيا","995"],["DJ","جيبوتي","253"],["JE","جيرسي","44"],["DM","دومينيكا","1767"],["RW","رواندا","250"],["RU","روسيا","7"],["RO","رومانيا","40"],["RE","روينيون","262"],["ZM","زامبيا","260"],["ZW","زيمبابوي","263"],["CI","ساحل العاج","225"],["WS","ساموا","685"],["AS","ساموا الأمريكية","1684"],["BL","سان بارتليمي","590"],["PM","سان بيير ومكويلون","508"],["MF","سان مارتن","590"],["SM","سان مارينو","378"],["VC","سانت فنسنت وجزر غرينادين","1784"],["KN","سانت كيتس ونيفيس","1869"],["LC","سانت لوسيا","1758"],["SX","سانت مارتن","1721"],["SH","سانت هيلينا","290"],["ST","ساو تومي وبرينسيبي","239"],["LK","سريلانكا","94"],["SJ","سفالبارد وجان ماين","47"],["SK","سلوفاكيا","421"],["SI","سلوفينيا","386"],["SG","سنغافورة","65"],["SY","سوريا","963"],["SR","سورينام","597"],["CH","سويسرا","41"],["SL","سيراليون","232"],["SC","سيشل","248"],["RS","صربيا","381"],["TJ","طاجيكستان","992"],["OM","عُمان","968"],["GM","غامبيا","220"],["GH","غانا","233"],["GD","غرينادا","1473"],["GL","غرينلاند","299"],["GT","غواتيمالا","502"],["GP","غوادلوب","590"],["GU","غوام","1671"],["GF","غويانا الفرنسية","594"],["GY","غيانا","592"],["GG","غيرنزي","44"],["GN","غينيا","224"],["GQ","غينيا الاستوائية","240"],["GW","غينيا بيساو","245"],["VU","فانواتو","678"],["FR","فرنسا","33"],["VE","فنزويلا","58"],["FI","فنلندا","358"],["VN","فيتنام","84"],["FJ","فيجي","679"],["CY","قبرص","357"],["QA","قطر","974"],["KG","قيرغيزستان","996"],["KZ","كازاخستان","7"],["NC","كاليدونيا الجديدة","687"],["HR","كرواتيا","385"],["KH","كمبوديا","855"],["CA","كندا","1"],["CU","كوبا","53"],["CW","كوراساو","599"],["KR","كوريا الجنوبية","82"],["KP","كوريا الشمالية","850"],["CR","كوستاريكا","506"],["XK","كوسوفو","383"],["CO","كولومبيا","57"],["KI","كيريباتي","686"],["KE","كينيا","254"],["LV","لاتفيا","371"],["LA","لاوس","856"],["LB","لبنان","961"],["LU","لوكسمبورغ","352"],["LR","ليبيريا","231"],["LT","ليتوانيا","370"],["LI","ليختنشتاين","423"],["LS","ليسوتو","266"],["MT","مالطا","356"],["ML","مالي","223"],["MY","ماليزيا","60"],["YT","مايوت","262"],["MG","مدغشقر","261"],["EG","مصر","20"],["MK","مقدونيا الشمالية","389"],["MW","ملاوي","265"],["MO","منطقة ماكاو الإدارية الخاصة","853"],["MN","منغوليا","976"],["MR","موريتانيا","222"],["MU","موريشيوس","230"],["MZ","موزمبيق","258"],["MD","مولدوفا","373"],["MC","موناكو","377"],["MS","مونتسرات","1664"],["MM","ميانمار (بورما)","95"],["FM","ميكرونيزيا","691"],["NA","ناميبيا","264"],["NR","ناورو","674"],["NP","نيبال","977"],["NG","نيجيريا","234"],["NI","نيكاراغوا","505"],["NZ","نيوزيلندا","64"],["NU","نيوي","683"],["HT","هايتي","509"],["HN","هندوراس","504"],["HU","هنغاريا","36"],["NL","هولندا","31"],["BQ","هولندا الكاريبية","599"],["HK","هونغ كونغ الصينية (منطقة إدارية خاصة)","852"]];
+const _byIso={}; COUNTRIES.forEach(c=>{_byIso[c[0]]=c;});
+const DIAL_MAP={}; ['US','RU','GB','AU','NO','FI','GP','CW','MA','RE'].forEach(i=>{const c=_byIso[i]; if(c) DIAL_MAP[c[2]]=c;});
+COUNTRIES.forEach(c=>{ if(!DIAL_MAP[c[2]]) DIAL_MAP[c[2]]=c; });
+const PHONE_REG={ clientPhone:()=>[s,'clientPhone',()=>showErrors], fbPhone:()=>[fb,'phone',()=>flightErrors] };
+function isoFlag(iso){ return String.fromCodePoint(...[...iso].map(ch=>127397+ch.charCodeAt(0))); }
+function flagHTML(iso){ return `<img class="cc-flag" src="https://flagcdn.com/w40/${iso.toLowerCase()}.png" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${isoFlag(iso)}'))">`; }
+function phoneSync(obj,key){ const c=_byIso[obj.phoneIso]||_byIso.LY; const d=(obj.phoneLocal||'').replace(/^0+/,''); obj[key]=d?('+'+c[2]+d):''; }
+function phoneParseIntl(raw){
+  const m=String(raw).replace(/[\s\-()]/g,'').match(/^(?:\+|00)(\d+)$/); if(!m) return null;
+  for(const L of [4,3,2,1]){ const c=DIAL_MAP[m[1].slice(0,L)]; if(c) return {iso:c[0],local:m[1].slice(L)}; }
+  return null;
+}
+function ensurePhone(obj,key){
+  if(obj.phoneIso!==undefined) return;
+  obj.phoneIso='LY'; obj.phoneLocal='';
+  const old=obj[key]; if(!old) return;
+  const p=phoneParseIntl(old);
+  if(p){ obj.phoneIso=p.iso; obj.phoneLocal=p.local; } else obj.phoneLocal=String(old).replace(/\D/g,'');
+  phoneSync(obj,key);
+}
+function ccBtnHTML(iso){ const c=_byIso[iso]; return flagHTML(c[0])+'<b>+'+c[2]+'</b><i>▾</i>'; }
+function phoneFieldHTML(id,obj,key,invalid){
+  ensurePhone(obj,key);
+  return `<div class="phone-wrap ${invalid?'invalid':''}" data-pid="${id}">
+    <button type="button" class="cc-btn" aria-label="اختيار الدولة">${ccBtnHTML(obj.phoneIso)}</button>
+    <input type="tel" inputmode="tel" dir="ltr" class="phone-input" value="${obj.phoneLocal||''}" placeholder="91 234 5678" autocomplete="tel-national">
+    <div class="cc-panel" hidden><input type="search" class="cc-search" placeholder="ابحث باسم الدولة أو المفتاح..." dir="rtl" autocomplete="off"><div class="cc-list"></div></div>
+  </div>`;
+}
+const _ccNorm=t=>String(t).trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي');
+function ccFill(w,q){
+  const qq=_ccNorm(q).replace(/^\+|^00/,'');
+  const arr=COUNTRIES.filter(c=>!qq||_ccNorm(c[1]).includes(qq)||c[2].startsWith(qq)||c[0].toLowerCase()===qq);
+  const cur=(PHONE_REG[w.dataset.pid]())[0].phoneIso;
+  w.querySelector('.cc-list').innerHTML=arr.length?arr.map(c=>`<div class="cc-item ${c[0]===cur?'on':''}" data-iso="${c[0]}">${flagHTML(c[0])}<span class="cc-name">${c[1]}</span><span class="cc-dial" dir="ltr">+${c[2]}</span></div>`).join(''):'<div class="cc-empty">لا توجد نتائج</div>';
+}
+function ccCloseAll(){ document.querySelectorAll('.cc-panel').forEach(p=>{p.hidden=true;}); }
+document.addEventListener('click',e=>{
+  const btn=e.target.closest&&e.target.closest('.cc-btn');
+  if(btn){
+    const w=btn.closest('.phone-wrap'), p=w.querySelector('.cc-panel'), wasHidden=p.hidden;
+    ccCloseAll();
+    if(wasHidden){ p.hidden=false; const si=p.querySelector('.cc-search'); si.value=''; ccFill(w,''); w.querySelector('.cc-item.on')?.scrollIntoView({block:'center'}); }
+    return;
+  }
+  const it=e.target.closest&&e.target.closest('.cc-item');
+  if(it){
+    const w=it.closest('.phone-wrap'); const [obj,key,err]=PHONE_REG[w.dataset.pid]();
+    obj.phoneIso=it.dataset.iso; phoneSync(obj,key);
+    w.querySelector('.cc-btn').innerHTML=ccBtnHTML(obj.phoneIso);
+    w.querySelector('.cc-panel').hidden=true;
+    w.classList.toggle('invalid',err()&&!obj[key]);
+    try{ saveProgress(); }catch(_){}
+    w.querySelector('.phone-input').focus();
+    return;
+  }
+  if(!(e.target.closest&&e.target.closest('.cc-panel'))) ccCloseAll();
+});
+document.addEventListener('input',e=>{
+  const t=e.target; if(!t.classList) return;
+  if(t.classList.contains('cc-search')){ ccFill(t.closest('.phone-wrap'),t.value); return; }
+  if(!t.classList.contains('phone-input')) return;
+  const w=t.closest('.phone-wrap'); const [obj,key,err]=PHONE_REG[w.dataset.pid]();
+  let v=t.value.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  const parsed=phoneParseIntl(v);
+  if(parsed){ obj.phoneIso=parsed.iso; v=parsed.local; w.querySelector('.cc-btn').innerHTML=ccBtnHTML(obj.phoneIso); }
+  else if(/^(\+|00)\d*$/.test(v.replace(/[\s\-()]/g,''))){ t.value=v; return; }
+  obj.phoneLocal=v.replace(/\D/g,''); t.value=obj.phoneLocal; phoneSync(obj,key);
+  w.classList.toggle('invalid',err()&&!obj[key]);
+});
 function fmtMoney(n){ return n.toLocaleString('en-US',{maximumFractionDigits:2}); }
 function addDays(start,i){ const d=new Date(start); d.setDate(start.getDate()+i); return d; }
 function pkgHotelAt(pkg,day){ return pkg.hotels.find(h=>day>=h.from&&day<=h.to); }
@@ -487,7 +575,7 @@ let showErrors=false;
 let flightMode=false;
 let flightErrors=false;
 const fb = {
-  name:"", phone:"",
+  name:"", phone:"", phoneIso:"LY", phoneLocal:"",
   tripType:"roundtrip",
   from:"", to:"", departDate:"", returnDate:"",
   segments:[{from:"",to:"",date:""},{from:"",to:"",date:""}],
@@ -559,10 +647,6 @@ function missingFieldsBanner(){
     if(!s.startDate) missing.push('تاريخ بدء الرحلة');
     if(!s.package) missing.push('الباكج أو عدد الليالي');
     else if(dayTotal()!==s.package.days) missing.push('توزيع الأيام (يجب أن يساوي مجموعها عدد أيام الباقة)');
-  } else if(step===4){
-    if(s.reception===null) missing.push('خدمة الاستقبال بالمطار');
-    if(s.stayTypes.length===0) missing.push('نوع الإقامة');
-    if(s.starsSel.length===0) missing.push('تصنيف الإقامة');
   }
   if(!missing.length) return '';
   return `<div class="note" style="border-color:#c0392b;background:rgba(192,57,43,.08);color:#c0392b;font-weight:700">⚠️ يرجى إكمال قبل المتابعة: ${missing.join('، ')}</div>`;
@@ -630,7 +714,8 @@ function buildWhatsAppMessage(){
   msg += `الجنسية: ${s.nationality}\nنوع الرحلة: ${s.tripType}\nعدد المسافرين: ${s.adults} بالغين، ${s.children} أطفال\nالميزانية المخصصة من العميل: $${(+s.budget).toLocaleString()}\n\n`;
   msg += `الوجهات:\n${cities.map(c=>`- ${c} (${s.dayMap[c]} أيام)`).join('\n')}\n\n`;
   msg += `الانطلاق من: ${s.origin}\nدرجة الطيران: ${s.flightClass}\nتاريخ البداية: ${s.startDate}\nالباكج: ${s.package.days} يوم\n\n`;
-  msg += `الإقامة: ${s.stayTypes.join('، ')} — ${s.starsSel.map(n=>n+'⭐').join('، ')}\nالاستقبال بالمطار: ${s.reception?'نعم':'لا'}\n`;
+  if(s.stayTypes.length||s.starsSel.length) msg += `الإقامة: ${s.stayTypes.join('، ')||'—'} — ${s.starsSel.map(n=>n+'⭐').join('، ')||'—'}\n`;
+  if(s.reception!==null) msg += `الاستقبال بالمطار: ${s.reception?'نعم':'لا'}\n`;
   if(s.addons.length) msg += `خدمات إضافية: ${s.addons.join('، ')}\n`;
   if(s.guideLang) msg += `لغة المرشد: ${s.guideLang}\n`;
   if(s.tourType) msg += `نوع الجولات: ${s.tourType}\n`;
@@ -659,7 +744,6 @@ function validate(){
   if(step===1) return s.clientName.trim() && s.clientPhone.trim() && s.nationality && s.tripType && (s.tripType!=="رحلة عمل" || s.businessSector);
   if(step===2) return s.cities.length>0;
   if(step===3){ if(!s.origin||!s.startDate||!s.package) return false; ensureDayMap(); return dayTotal()===s.package.days; }
-  if(step===4) return s.reception!==null && s.stayTypes.length>0 && s.starsSel.length>0;
   return true;
 }
 
@@ -788,9 +872,9 @@ function stepFlightBooking(){
   <label class="field"><span>الاسم الكامل</span>
     <input type="text" id="fbName" class="${err&&!fb.name.trim()?'invalid':''}" value="${fb.name}" placeholder="مثال: أحمد محمد">
   </label>
-  <label class="field"><span>رقم الهاتف</span>
-    <input type="text" id="fbPhone" class="${err&&!fb.phone.trim()?'invalid':''}" value="${fb.phone}" placeholder="مثال: 00218912345678">
-  </label>
+  <div class="field"><span>رقم الهاتف</span>
+    ${phoneFieldHTML('fbPhone',fb,'phone',err&&!fb.phone.trim())}
+  </div>
   <label class="field"><span>نوع الرحلة</span>
     <div class="choice-row">
       ${[["roundtrip","ذهاب وعودة"],["oneway","ذهاب فقط"],["multi","مدن متعددة"]].map(([k,l])=>`<div class="choice ${fb.tripType===k?'on':''}" data-triptype="${k}">${l}</div>`).join('')}
@@ -836,7 +920,6 @@ function stepFlightBooking(){
 function wireFlightBooking(){
   document.getElementById('fbBack')?.addEventListener('click',()=>{ flightMode=false; render(); });
   document.getElementById('fbName')?.addEventListener('input',e=>{ fb.name=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.name.trim()); });
-  document.getElementById('fbPhone')?.addEventListener('input',e=>{ fb.phone=e.target.value; e.target.classList.toggle('invalid', flightErrors && !fb.phone.trim()); });
   document.querySelectorAll('[data-triptype]').forEach(el=>el.addEventListener('click',()=>{
     fb.tripType=el.dataset.triptype;
     if(fb.tripType==="multi" && fb.segments.length<2) fb.segments=[{from:"",to:"",date:""},{from:"",to:"",date:""}];
@@ -876,10 +959,10 @@ function step1(){
     <input type="text" id="clientName" class="${err&&!s.clientName.trim()?'invalid':''}" value="${s.clientName}" placeholder="مثال: أحمد محمد">
     ${err&&!s.clientName.trim()?'<div class="field-err">هذا الحقل مطلوب</div>':''}
   </label>
-  <label class="field"><span>رقم الهاتف (مع رمز الدولة)</span>
-    <input type="text" id="clientPhone" class="${err&&!s.clientPhone.trim()?'invalid':''}" value="${s.clientPhone}" placeholder="مثال: 00218912345678">
+  <div class="field"><span>رقم الهاتف</span>
+    ${phoneFieldHTML('clientPhone',s,'clientPhone',err&&!s.clientPhone.trim())}
     ${err&&!s.clientPhone.trim()?'<div class="field-err">هذا الحقل مطلوب</div>':''}
-  </label>
+  </div>
   <label class="field"><span>الجنسية</span>
     <select id="nat" class="${err&&!s.nationality?'invalid':''}"><option value="">اختر الجنسية</option>${NATIONALITIES.map(n=>`<option ${s.nationality===n?'selected':''}>${n}</option>`).join('')}</select>
     ${err&&!s.nationality?'<div class="field-err">يرجى اختيار الجنسية</div>':''}
@@ -983,7 +1066,8 @@ function step4(){
   const err=showErrors;
   return `
   <h2 class="step-title">الاستقبال والإقامة</h2>
-  <p class="step-sub">الخطوة 4 من 6</p>
+  <p class="step-sub">الخطوة 4 من 6 · اختيارية</p>
+  <div class="note opt-note">✨ هذه الصفحة اختيارية — يمكنك تجاوزها والضغط على «التالي» مباشرة.</div>
   <label class="field"><span>خدمة الاستقبال والتوديع بالمطار</span>
     <div class="choice-row ${err&&s.reception===null?'invalid':''}">
       <div class="choice ${s.reception===true?'on':''}" data-rec="1">نعم، أريدها</div>
@@ -1008,7 +1092,8 @@ function step5(){
   const opts=["أماكن حيوية ومزدحمة","أماكن هادئة وخالية","مدن متطورة وتكنولوجيا","طبيعة وغابات","شواطئ وبحار","حفلات وأنشطة صاخبة","وجهات رومانسية هادئة"];
   return `
   <h2 class="step-title">تفضيلات الجولات وذوقك</h2>
-  <p class="step-sub">الخطوة 5 من 6</p>
+  <p class="step-sub">الخطوة 5 من 6 · اختيارية</p>
+  <div class="note opt-note">✨ هذه الصفحة اختيارية — يمكنك تجاوزها والضغط على «التالي» مباشرة.</div>
   <label class="field"><span>لغة المرشد السياحي</span>
     <div class="choice-row">${["اللغة العربية","اللغة الإنجليزية"].map(l=>`<div class="choice ${s.guideLang===l?'on':''}" data-lang="${l}">${l}</div>`).join('')}</div>
   </label>
@@ -1044,7 +1129,7 @@ function step6(){
   <div class="summary-block">
     <h3>بيانات التواصل</h3>
     <div class="summary-row"><span>الاسم</span><span>${s.clientName}</span></div>
-    <div class="summary-row"><span>الهاتف</span><span>${s.clientPhone}</span></div>
+    <div class="summary-row"><span>الهاتف</span><span dir="ltr">${s.clientPhone}</span></div>
   </div>
   <div class="summary-block">
     <h3>البيانات الأساسية</h3>
@@ -1069,9 +1154,9 @@ function step6(){
   </div>`:''}
   <div class="summary-block">
     <h3>الإقامة والاستقبال</h3>
-    <div class="summary-row"><span>الاستقبال بالمطار</span><span>${s.reception?'نعم':'لا'}</span></div>
-    <div class="summary-row"><span>نوع الإقامة</span><span class="summary-tags">${s.stayTypes.join('، ')}</span></div>
-    <div class="summary-row"><span>التصنيف</span><span>${s.starsSel.map(n=>'⭐'.repeat(n)).join('  ')}</span></div>
+    <div class="summary-row"><span>الاستقبال بالمطار</span><span>${s.reception===null?'لم يُحدد':(s.reception?'نعم':'لا')}</span></div>
+    <div class="summary-row"><span>نوع الإقامة</span><span class="summary-tags">${s.stayTypes.length?s.stayTypes.join('، '):'لم يُحدد'}</span></div>
+    <div class="summary-row"><span>التصنيف</span><span>${s.starsSel.length?s.starsSel.map(n=>'⭐'.repeat(n)).join('  '):'لم يُحدد'}</span></div>
     ${s.addons.length?`<div class="summary-row"><span>خدمات إضافية</span><span class="summary-tags">${s.addons.join('، ')}</span></div>`:''}
   </div>
   <div class="summary-block">
@@ -1096,10 +1181,6 @@ function wire(){
   document.getElementById('clientName')?.addEventListener('input',e=>{
     s.clientName=e.target.value;
     e.target.classList.toggle('invalid', showErrors && !s.clientName.trim());
-  });
-  document.getElementById('clientPhone')?.addEventListener('input',e=>{
-    s.clientPhone=e.target.value;
-    e.target.classList.toggle('invalid', showErrors && !s.clientPhone.trim());
   });
   document.getElementById('nat')?.addEventListener('change',e=>{s.nationality=e.target.value;render();});
   document.getElementById('budget')?.addEventListener('input',e=>{s.budget=Math.max(1500,+e.target.value||1500);});
